@@ -1,0 +1,38 @@
+name: Build Documentation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-docs:
+    name: Build Sphinx Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install documentation dependencies
+        run: |
+          pip install --upgrade pip
+          pip install sphinx sphinx-autodoc-typehints sphinx-rtd-theme sphinxcontrib-napoleon
+
+      - name: Build documentation
+        working-directory: docs
+        run: |
+          sphinx-build -b html . _build/html
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-html
+          path: docs/_build/html
+          retention-days: 7
