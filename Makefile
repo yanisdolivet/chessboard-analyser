@@ -5,10 +5,10 @@
 ## Makefile
 ##
 
-BIN = my_torch_analyzer
+BIN = my_torch_generator
 
 all:
-	cp main.py $(BIN)
+	cp my_torch_generator.py $(BIN)
 	chmod 755 $(BIN)
 
 clean:
