@@ -45,7 +45,7 @@ jobs:
 
       - name: Check if EXECUTABLE exist
         run: |
-          BINARY={{ echo ${{ env.EXECUTABLE }} | cut -d' ' -f1 }}
+          BINARY=$(echo "${{ env.EXECUTABLE }}" | cut -d' ' -f1)
           BINARY_PATH=$(find "$(pwd)/" -name "$BINARY" -type f -executable | head -n 1)
           if [ -z "$BINARY_PATH" ]; then
             echo "Error during compilation !"
