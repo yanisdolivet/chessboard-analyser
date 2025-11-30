@@ -2,9 +2,9 @@ name: Build and Benchmark ML Models
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "gh-actions" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main", "gh-actions" ]
 
 jobs:
   generate-training-curves:
