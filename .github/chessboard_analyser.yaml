@@ -1,0 +1,70 @@
+name: Chessboard Analyser CI
+
+on:
+  push:
+    branches-ignore:
+      - "ga-ignore-*"
+  pull_request:
+    branches-ignore:
+      - "ga-ignore-*"
+
+env:
+  MIRROR_URL: "https://github.com/EpitechPGE3-2025/G-CNA-500-LYN-5-1-neuralnetwork-4"
+  EXECUTABLE: "my_torch_analyzer"
+
+jobs:
+  check_mirror:
+    name: Check if mirror
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if repository is mirror
+        run: |
+          URL="$(echo ${{ github.repositoryUrl }} | cut -c 18-)"
+          URL_MIRROR="$(echo ${{ env.MIRROR_URL }} | cut -c 16-)"
+          if [ "$URL" == "$URL_MIRROR" ]
+          then
+              echo "This repository is the mirror !"
+              exit 1
+          fi
+
+  check_compilation:
+    name: Check compilation
+    needs: check_mirror
+    runs-on: ubuntu-latest
+    container: epitechcontent/epitest-docker:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name : build project
+        run: |
+          make fclean
+          make all
+
+      - name: Check if EXECUTABLE exist
+        run: |
+          BINARY={{ echo ${{ env.EXECUTABLE }} | cut -d' ' -f1 }}
+          BINARY_PATH=$(find "$(pwd)/" -name "$BINARY" -type f -executable | head -n 1)
+          if [ -z "$BINARY_PATH" ]; then
+            echo "Error during compilation !"
+            exit 1
+          fi
+
+  push_to_mirror:
+    name: Push to mirror
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push to mirror
+        uses: pixta-dev/repository-mirroring-action@v1
+        with:
+          target_repo_url:
+            ${{ env.MIRROR_URL }}
+          ssh_private_key:
+            ${{ secrets.GIT_SSH_PRIVATE_KEY }}
