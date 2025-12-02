@@ -7,8 +7,6 @@
 
 #include "Matrix.hpp"
 
-
-
 my_torch::Matrix::Matrix(int rows, int cols, bool is_random)
     : rows(rows), cols(cols), data(rows, std::vector<double>(cols, 0.0))
 {
