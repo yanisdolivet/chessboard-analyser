@@ -1,0 +1,24 @@
+{
+    "layers": [
+        {
+            "type": "INPUT",
+            "size": 64,
+            "activation": "none"
+        },
+        {
+            "type": "HIDDEN1",
+            "size": 32,
+            "activation": "relu"
+        },
+        {
+            "type": "HIDDEN2",
+            "size": 16,
+            "activation": "relu"
+        },
+        {
+            "type": "OUTPUT",
+            "size": 1,
+            "activation": "sigmoid"
+        }
+    ]
+}
