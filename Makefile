@@ -1,60 +1,125 @@
 ##
 ## EPITECH PROJECT, 2025
-## chessboard-analyser
+## Delivery
 ## File description:
 ## Makefile
 ##
 
-CC	= g++
+## ------------------------------------ ##
+##              VARIABLES               ##
 
-SRCDIR	=	src
-TESTDIR	=	tests
+CC                  := g++
+CFLAGS              := -std=c++17 -Wall -Wextra -pthread
+INCLUDES            := -I./include -I./include/analyzer -I./include/my_torch
+DFLAGS              := -g3
+TFLAGS              := -lcriterion --coverage
 
-BIN	=	my_torch_generator
-MYTORCH	=	my_torch
+ANALYZER_EXEC       := my_torch_analyzer
+GENERATOR_EXEC      := my_torch_generator
 TEST_EXECUTABLE     := unit_tests
 
-SRCS	= 	src/main.cpp	\
-	   		src/my_torch/Matrix.cpp	\
+OBJDIR              := obj
+SRCDIR              := src
+TOOLSDIR            := tools
+TESTDIR             := tests
+GENERATOR_SRCDIR    := $(TOOLSDIR)/generator
 
-OBJS	=	$(SRCS:.cpp=.o)
+## Source files
+ANALYZER_SRCDIR     := $(SRCDIR)/analyzer
+MY_TORCH_SRCDIR     := $(SRCDIR)/my_torch
 
-TEST_SOURCES        := $(filter-out $(SRCDIR)/main.cpp, $(SRCS))
-TEST_OBJECTS        := $(shell find $(TESTDIR) -name '*.cpp')
-TEST_GENERATED_FILES := $(shell find . -name '*.gcno' -o -name '*.gcda')
+ANALYZER_SOURCES    := $(shell find $(ANALYZER_SRCDIR) -name '*.cpp')
+MY_TORCH_SOURCES    := $(shell find $(MY_TORCH_SRCDIR) -name '*.cpp')
+MAIN_SOURCE         := $(SRCDIR)/main.cpp
+MAIN_GENERATOR		:= $(GENERATOR_SRCDIR)/builder.py
 
-CPPFLAGS	:= -I./include/my_torch -Wall -Wextra -Werror -std=c++17
-DFLAGS	:= -g -fsanitize=address
-TFLAGS	:= -lcriterion --coverage
+## Object files
+ANALYZER_OBJECTS    := $(patsubst $(ANALYZER_SRCDIR)/%.cpp,\
+						$(OBJDIR)/analyzer/%.o,$(ANALYZER_SOURCES))
+MY_TORCH_OBJECTS    := $(patsubst $(MY_TORCH_SRCDIR)/%.cpp,\
+						$(OBJDIR)/my_torch/%.o,$(MY_TORCH_SOURCES))
+MAIN_OBJECT         := $(OBJDIR)/main.o
 
-all: $(MYTORCH)
 
-$(MYTORCH): $(OBJS)
-	@$(CC) $(CPPFLAGS) $^ -o $@
-	cp ./tools/generator/builder.py $(BIN)
-	chmod 755 $(BIN)
+## Test files
+TEST_SOURCES        := $(shell find $(TESTDIR) -name '*.cpp')
+TEST_OBJECTS        := $(patsubst $(TESTDIR)/%.cpp,\
+						$(OBJDIR)/tests/%.o,$(TEST_SOURCES))
 
-%/.o: %.cpp
-	$(CC) $(CPPFLAGS) -c $< -o $@
+
+RESET               := \033[0m
+GREEN               := \033[32m
+BLUE                := \033[34m
+CYAN                := \033[36m
+RED                 := \033[31m
+
+DEBUG ?= 1
+ifeq ($(DEBUG), 1)
+    CFLAGS += $(DFLAGS)
+endif
+
+## ------------------------------------ ##
+##                RULES                 ##
+
+all: $(ANALYZER_EXEC)
+	@echo "$(GREEN)[✔] Project compiled successfully.$(RESET)"
+
+$(ANALYZER_EXEC): $(ANALYZER_OBJECTS) $(MY_TORCH_OBJECTS) $(MAIN_OBJECT)
+	@mkdir -p $(@D)
+	@echo "$(CYAN)[➜] Linking $(ANALYZER_EXEC)$(RESET)"
+	@$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@
+	cp $(MAIN_GENERATOR) $(GENERATOR_EXEC)
+	chmod 755 $(GENERATOR_EXEC)
+	@echo "$(GREEN)[✔] Analyzer compiled: $(ANALYZER_EXEC)$(RESET)"
+
+$(OBJDIR)/main.o: $(SRCDIR)/main.cpp
+	@mkdir -p $(@D)
+	@echo "$(BLUE)[~] Compiling: $<$(RESET)"
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(OBJDIR)/analyzer/%.o: $(ANALYZER_SRCDIR)/%.cpp
+	@mkdir -p $(@D)
+	@echo "$(BLUE)[~] Compiling analyzer: $<$(RESET)"
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(OBJDIR)/my_torch/%.o: $(MY_TORCH_SRCDIR)/%.cpp
+	@mkdir -p $(@D)
+	@echo "$(BLUE)[~] Compiling my_torch: $<$(RESET)"
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(OBJDIR)/tests/%.o: $(TESTDIR)/%.cpp
+	@mkdir -p $(@D)
+	@echo "$(BLUE)[~] Compiling test: $<$(RESET)"
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -f $(BIN) $(MYTORCH)
-	rm -f $(OBJS) $(TEST_EXECUTABLE)
-	rm -f $(TEST_GENERATED_FILES)
+	@rm -rf $(OBJDIR)
+	@rm -f $(TEST_EXECUTABLE)
+	@rm -f *.gcno
+	@rm -f *.gcda
+	@rm -f vgcore.*
+	@echo "$(RED)[✘] Objects and coverage files removed.$(RESET)"
 
 fclean: clean
+	@rm -f $(ANALYZER_EXEC) $(TEST_EXECUTABLE)
+	@echo "$(RED)[✘] Executables removed.$(RESET)"
 
 re: fclean
 	@$(MAKE) all --no-print-directory
 
+## ------------------------------------ ##
+##              UNIT TESTS              ##
+
 tests_run:
-	@$(CC) $(CPPFLAGS) $(DFLAGS) $(TFLAGS) $(TEST_SOURCES) $(TEST_OBJECTS) -o $(TEST_EXECUTABLE)
+	@echo "$(CYAN)[➜] Compiling tests$(RESET)"
+	@$(CC) $(CFLAGS) $(INCLUDES) $(TEST_SOURCES) $(ANALYZER_SOURCES) \
+	$(MY_TORCH_SOURCES) $(TFLAGS) -o $(TEST_EXECUTABLE)
+	@echo "$(GREEN)[✔] Unit tests executable created: $(TEST_EXECUTABLE)$(RESET)"
+	@echo "$(CYAN)[➜] Running unit tests$(RESET)"
 	@./$(TEST_EXECUTABLE)
 
-coverage:
-	gcovr --exclude tests
+coverage: tests_run
+	@echo "$(CYAN)[➜] Generating code coverage report$(RESET)"
+	@gcovr --exclude $(TESTDIR)
 
-test:
-	PYTHONPATH=$(PWD) pytest -q
-
-.PHONY: all clean fclean re tests_run test coverage
+.PHONY: all clean fclean re tests_run coverage
