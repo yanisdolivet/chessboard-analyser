@@ -8,6 +8,7 @@
 #include <iostream>
 #include <algorithm>
 #include "Network.hpp"
+#include "FENparser.hpp"
 
 bool cmdOptionExists(char** begin, char** end, const std::string& option)
 {
@@ -16,6 +17,7 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 int main(int argc, char *argv[]) {
     Network network;
+    FENparser parser;
 
     if (cmdOptionExists(argv, argv+argc, "-h")) {
         std::cout << "USAGE" << std::endl;
@@ -34,6 +36,9 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    std::string filename = argv[1];
-    network.parse_untrained_nn(filename);
+    std::string loadfile = argv[1];
+    network.parse_untrained_nn(loadfile);
+
+    std::string chessfile = argv[2];
+    parser.parse(chessfile);
 }
