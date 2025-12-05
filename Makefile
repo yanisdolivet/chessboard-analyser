@@ -101,7 +101,7 @@ clean:
 	@echo "$(RED)[✘] Objects and coverage files removed.$(RESET)"
 
 fclean: clean
-	@rm -f $(ANALYZER_EXEC) $(TEST_EXECUTABLE)
+	@rm -f $(ANALYZER_EXEC) $(GENERATOR_EXEC) $(TEST_EXECUTABLE)
 	@echo "$(RED)[✘] Executables removed.$(RESET)"
 
 re: fclean
