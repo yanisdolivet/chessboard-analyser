@@ -55,3 +55,14 @@ int FENparser::parse(const std::string& fenfile)
     }
     return 0;
 }
+
+float FENparser::maping_result(const std::string result)
+{
+    if (result == "Nothing")
+        return float(0);
+    else if (result == "Check")
+        return (float)0.5;
+    else if (result == "Checkmate")
+        return (float)1;
+    return (float)-1;
+}
