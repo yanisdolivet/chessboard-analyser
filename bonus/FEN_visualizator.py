@@ -1,11 +1,11 @@
+#!/usr/bin/env python3
+
 ##
 ## EPITECH PROJECT, 2025
 ## chessboard-analyser
 ## File description:
 ## FEN_visualizator
 ##
-
-#!/usr/bin/env python3
 
 import sys
 from tkinter import Tk, Canvas, PhotoImage

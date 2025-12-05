@@ -23,6 +23,6 @@
   ],
   "hyperparameters": {
     "learning_rate": 0.01,
-    "initialization": "he_normal"
+    "initialization": "random"
   }
 }

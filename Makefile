@@ -31,7 +31,7 @@ all: $(MYTORCH)
 
 $(MYTORCH): $(OBJS)
 	@$(CC) $(CPPFLAGS) $^ -o $@
-	cp my_torch_generator.py $(BIN)
+	cp ./tools/generator/builder.py $(BIN)
 	chmod 755 $(BIN)
 
 %/.o: %.cpp
