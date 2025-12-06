@@ -19,12 +19,11 @@ class FENparser {
         FENparser();
         ~FENparser();
 
-        int parse(const std::string& fenfile);
-        void char_value(const char& c, std::vector<float> &board_value);
+        std::vector<std::vector<double>> parse(const std::string& fenfile);
+        void char_value(const char& c, std::vector<double> &board_value);
 
-        float maping_result(const std::string result);
+        double maping_result(const std::string result);
 
     protected:
     private:
-        std::vector<std::vector<float>> _input;
 };

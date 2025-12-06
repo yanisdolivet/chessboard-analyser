@@ -9,15 +9,23 @@
 #include <algorithm>
 #include "Network.hpp"
 #include "FENparser.hpp"
+#include "Matrix.hpp"
+#include "Analyzer.hpp"
 
 bool cmdOptionExists(char** begin, char** end, const std::string& option)
 {
     return std::find(begin, end, option) != end;
 }
 
+double f(double n)
+{
+    return (double)(1 + n);
+}
+
 int main(int argc, char *argv[]) {
-    Network network;
+    my_torch::Network network;
     FENparser parser;
+    Analyzer analyzer;
 
     if (cmdOptionExists(argv, argv+argc, "-h")) {
         std::cout << "USAGE" << std::endl;
@@ -37,8 +45,15 @@ int main(int argc, char *argv[]) {
     }
 
     std::string loadfile = argv[1];
-    network.parse_untrained_nn(loadfile);
+    network.parse_untrained_nn(loadfile); // Parse the nn file
 
+    // Parse the chess position into a vector of double
     std::string chessfile = argv[2];
-    parser.parse(chessfile);
+    std::vector<std::vector<double>> inputs = parser.parse(chessfile);
+
+    // Transform (each) chess position into a (1, 64) matrix
+    std::vector<my_torch::Matrix> matrix_input = analyzer.vector_to_matrix(inputs);
+
+    my_torch::Matrix res = network.forward(matrix_input[0]);
+    res.print();
 }

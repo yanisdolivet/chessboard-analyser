@@ -7,6 +7,11 @@
 
 #include "Matrix.hpp"
 
+my_torch::Matrix::Matrix()
+    : rows(0), cols(0), data()
+{
+}
+
 my_torch::Matrix::Matrix(int rows, int cols, bool is_random)
     : rows(rows), cols(cols), data(rows, std::vector<double>(cols, 0.0))
 {
@@ -83,4 +88,37 @@ my_torch::Matrix my_torch::Matrix::operator*(double scalar) const
         }
     }
     return result;
+}
+
+void my_torch::Matrix::filled(std::vector<double> fulldata)
+{
+    int k = 0;
+
+    for (int i = 0; i < this->rows; i++) {
+        for (int j = 0; j < this->cols; j++) {
+            this->data[i][j] = fulldata.at(k);
+            k++;
+        }
+    }
+}
+
+my_torch::Matrix my_torch::Matrix::apply(std::function<double(double)> func)
+{
+    Matrix result(rows, cols);
+    for (int i = 0; i < this->rows; i++) {
+        for (int j = 0; j < this->cols; j++) {
+            result.at(i, j) = func(data[i][j]);
+        }
+    }
+    return result;
+}
+
+void my_torch::Matrix::print() const
+{
+    for (int i = 0; i < this->rows; i++) {
+        for (int j = 0; j < this->cols; j++) {
+            std::cout << this->data[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
 }
