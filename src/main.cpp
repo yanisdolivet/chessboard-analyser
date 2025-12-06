@@ -54,6 +54,9 @@ int main(int argc, char *argv[]) {
     // Transform (each) chess position into a (1, 64) matrix
     std::vector<my_torch::Matrix> matrix_input = analyzer.vector_to_matrix(inputs);
 
-    my_torch::Matrix res = network.forward(matrix_input[0]);
-    res.print();
+    // Forward propagation 1x for each position
+    for (my_torch::Matrix pos: matrix_input) {
+        my_torch::Matrix res = network.forward(matrix_input[0]);
+        res.print();
+    }
 }
