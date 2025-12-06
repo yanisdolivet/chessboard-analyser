@@ -10,17 +10,20 @@
 #include <iostream>
 #include <fstream>
 #include "FileFomat.hpp"
+#include "Matrix.hpp"
+#include "Layer.hpp"
 
-class Network {
-    public:
-        Network();
-        ~Network();
+namespace my_torch {
+    class Network {
+        public:
+            Network();
+            ~Network();
 
-        void parse_untrained_nn(const std::string &blanknn);
+            void parse_untrained_nn(const std::string &blanknn);
+            Matrix forward(Matrix input);
 
-    protected:
-    private:
-        uint32_t _nb_layer;
-        TopologyLayer_t _topology;
-        WeightsBiasesLayer_t _weightsBiases;
-};
+        protected:
+        private:
+            std::vector<Layer> layers;
+    };
+}
