@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
     // Forward propagation 1x for each position
     for (my_torch::Matrix pos: matrix_input) {
-        my_torch::Matrix res = network.forward(matrix_input[0]);
+        my_torch::Matrix res = network.forward(pos);
         res.print();
     }
 }

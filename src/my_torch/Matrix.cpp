@@ -122,3 +122,13 @@ void my_torch::Matrix::print() const
         std::cout << std::endl;
     }
 }
+
+void my_torch::Matrix::printMatrix() const
+{
+    for (int i = 0; i < this->rows; i++) {
+        for (int j = 0; j < this->cols; j++) {
+            std::cout << this->data[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+}

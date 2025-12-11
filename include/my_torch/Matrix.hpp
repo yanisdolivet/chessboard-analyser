@@ -34,6 +34,8 @@ namespace my_torch {
         double& at(int r, int c) { return data[r][c]; }
         const double& at(int r, int c) const { return data[r][c]; }
 
+        void printMatrix() const;
+
     private:
         int rows;
         int cols;
