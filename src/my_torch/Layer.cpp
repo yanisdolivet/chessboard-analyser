@@ -59,3 +59,45 @@ void my_torch::Layer::setBiases(std::vector<double> biases)
     b.filled(biases);
     this->biases = b;
 }
+
+double my_torch::Layer::activate_derivative(double x) {
+    if (_activation_type == "relu") {
+        return (x > 0) ? 1.0 : 0.0;
+    } else if (_activation_type == "sigmoid") {
+        double s = 1.0 / (1.0 + std::exp(-x));
+        return s * (1.0 - s);
+    }
+    return 1.0;
+}
+
+my_torch::Matrix my_torch::Layer::backward(const Matrix& gradient, double learning_rate)
+{
+
+    Matrix dZ = this->cache_z;
+
+    for (int i = 0; i < dZ.getRows(); i++) {
+        for (int j = 0; j < dZ.getCols(); j++) {
+            double z_val = this->cache_z.at(i, j);
+            double grad_val = gradient.at(i, j);
+            double derivative = this->activate_derivative(z_val);
+
+            dZ.at(i, j) = grad_val * derivative;
+        }
+    }
+
+    Matrix input_T = this->cache_input.transpose();
+    Matrix dW = input_T.multiply(dZ);
+
+    Matrix dB = dZ;
+
+    Matrix weights_T = this->weights.transpose();
+    Matrix dX_prev = dZ.multiply(weights_T);
+
+    Matrix step_W = dW * learning_rate;
+    Matrix step_B = dB * learning_rate;
+
+    this->weights = this->weights - step_W;
+    this->biases  = this->biases - step_B;
+
+    return dX_prev;
+}

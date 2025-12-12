@@ -30,6 +30,9 @@ namespace my_torch {
 
             std::string getActivationType() const { return _activation_type; }
 
+            double activate_derivative(double x);
+            Matrix backward(const Matrix& gradient, double learning_rate);
+
         private:
             Matrix weights;
             Matrix biases;
