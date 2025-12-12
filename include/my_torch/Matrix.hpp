@@ -13,7 +13,7 @@
 
 namespace my_torch {
 
-    class Matrix {
+    class   Matrix {
     public:
         Matrix();
         Matrix(int rows, int cols, bool is_random = false);

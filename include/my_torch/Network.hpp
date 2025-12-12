@@ -22,6 +22,10 @@ namespace my_torch {
             void parse_untrained_nn(const std::string &blanknn);
             Matrix forward(Matrix input);
 
+            void train(std::vector<Matrix> inputs, std::vector<Matrix> expected_outputs, double learning_rate);
+
+            void backward(Matrix& gradient, double learning_rate);
+
         protected:
         private:
             std::vector<Layer> layers;

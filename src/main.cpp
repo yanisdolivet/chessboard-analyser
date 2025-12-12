@@ -47,16 +47,13 @@ int main(int argc, char *argv[]) {
     std::string loadfile = argv[1];
     network.parse_untrained_nn(loadfile); // Parse the nn file
 
-    // Parse the chess position into a vector of double
     std::string chessfile = argv[2];
-    std::vector<std::vector<double>> inputs = parser.parse(chessfile);
+    std::vector<my_torch::Matrix> matrix_output;
+    std::vector<std::vector<double>> inputs = parser.parse(chessfile, matrix_output);
 
     // Transform (each) chess position into a (1, 64) matrix
     std::vector<my_torch::Matrix> matrix_input = analyzer.vector_to_matrix(inputs);
 
-    // Forward propagation 1x for each position
-    for (my_torch::Matrix pos: matrix_input) {
-        my_torch::Matrix res = network.forward(pos);
-        res.print();
-    }
+    for (int i = 0; i < 50; i++)
+        network.train(matrix_input, matrix_output, 0.01);
 }

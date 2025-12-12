@@ -73,3 +73,29 @@ my_torch::Matrix my_torch::Network::forward(Matrix input)
     }
     return current;
 }
+
+void my_torch::Network::train(std::vector<Matrix> inputs, std::vector<Matrix> expected_outputs, double learning_rate)
+{
+    for (std::size_t i = 0; i < inputs.size(); i++) {
+        Matrix output = this->forward(inputs[i]);
+
+        double output_value = output.at(0, 0);
+        double expected_value = expected_outputs[i].at(0, 0);
+
+        double error = expected_value - output_value;
+        double loss = error * error;
+
+        std::cout << "Loss: " << loss << std::endl;
+        Matrix gradient = output - expected_outputs[i];
+        this->backward(gradient, learning_rate);
+    }
+}
+
+void my_torch::Network::backward(Matrix& gradient, double learning_rate)
+{
+    Matrix current_gradient = gradient;
+
+    for (int i = layers.size() - 1; i >= 0; --i) {
+        current_gradient = layers[i].backward(current_gradient, learning_rate);
+    }
+}
