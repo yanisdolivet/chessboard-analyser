@@ -71,6 +71,7 @@ def parse_config(filepath):
             config = json.load(f)
             for layer in config.get("layers", []):
                 size = layer.get("size", 0)
+                print(type(size))
                 layer_size.append(size)
             init_method = config.get("hyperparameters", {}).get("initialization", "random")
         return layer_size, init_method
