@@ -1,5 +1,6 @@
 # Project related ignores
 my_torch_analyzer
+data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

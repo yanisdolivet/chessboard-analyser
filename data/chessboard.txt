@@ -3,3 +3,5 @@ rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1
 rnbqkbnr/pppp2pp/8/4pp1Q/3P4/4P3/PPP2PPP/RNB1KBNR b KQkq - 1 3
 8/8/8/8/8/8/8/k1K5 w - - 0 1
+r1bq2nr/pppnb1pp/3p1k2/5Q2/4P3/8/PPP2PPP/RNB1K2R b KQ - 3 9
+2k5/PP6/1B1K4/8/8/8/6p1/8 b - - 0 64
