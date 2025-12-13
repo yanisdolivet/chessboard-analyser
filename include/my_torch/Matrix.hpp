@@ -13,8 +13,9 @@
 
 namespace my_torch {
 
-    class Matrix {
+    class   Matrix {
     public:
+        Matrix();
         Matrix(int rows, int cols, bool is_random = false);
         ~Matrix() = default;
 
@@ -23,14 +24,17 @@ namespace my_torch {
         Matrix operator+(const Matrix& other) const;
         Matrix operator-(const Matrix& other) const;
         Matrix operator*(double scalar) const;
+        void filled(std::vector<double> fulldata);
 
-        void apply(std::function<double(double)> func);
+        my_torch::Matrix apply(std::function<double(double)> func);
 
         void print() const;
         int getRows() const { return rows; }
         int getCols() const { return cols; }
         double& at(int r, int c) { return data[r][c]; }
         const double& at(int r, int c) const { return data[r][c]; }
+
+        void printMatrix() const;
 
     private:
         int rows;
