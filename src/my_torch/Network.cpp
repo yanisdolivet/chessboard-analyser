@@ -42,7 +42,6 @@ void my_torch::Network::parse_untrained_nn(const std::string &blanknn)
     for (unsigned int i = 0; i < header.layerCount; i++) {
         uint32_t nb_wandb;
         ifd.read(reinterpret_cast<char *>(&nb_wandb), sizeof(uint32_t));
-        std::cout << "layer size at " << i << " : " << nb_wandb << std::endl;
         _layer_size.push_back(nb_wandb);
     }
 
@@ -72,8 +71,6 @@ void my_torch::Network::parse_untrained_nn(const std::string &blanknn)
         }
         this->layers.at(i-1).setBiases(biases);
     }
-
-    std::cout << "CONFIG FILE PARSE SUCCESSFULLY" << std::endl;
 }
 
 void my_torch::Network::pack_trained_nn(const std::string& trainfile)
@@ -91,12 +88,9 @@ void my_torch::Network::pack_trained_nn(const std::string& trainfile)
     std::fwrite(&magic, sizeof(uint32_t), 1, f);
     std::fwrite(&layerCount, sizeof(uint32_t), 1, f);
 
-    std::cout << "Writing " << layerCount << " layers" << std::endl;
-
     // Write layer sizes (topology)
     for (unsigned int i = 0; i < layerCount; i++) {
         uint32_t layerSize = this->_layer_size.at(i);
-        std::cout << "Layer " << i << " size: " << layerSize << std::endl;
         std::fwrite(&layerSize, sizeof(uint32_t), 1, f);
     }
 
@@ -123,7 +117,6 @@ void my_torch::Network::pack_trained_nn(const std::string& trainfile)
     }
 
     std::fclose(f);
-    std::cout << "Trained network saved to " << trainfile << std::endl;
 }
 
 my_torch::Matrix my_torch::Network::forward(Matrix input)

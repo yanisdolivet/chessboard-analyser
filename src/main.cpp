@@ -92,10 +92,11 @@ int main(int argc, char *argv[]) {
         } else if (argc != 4) {
             std::cerr << "Invalid number argument for train mode." << std::endl;
             return 1;
+        } else {
+            savefile = "trained_network.nn";
+            loadfile = argv[2];
+            chessfile = argv[3];
         }
-        savefile = "trained_network.nn";
-        loadfile = argv[2];
-        chessfile = argv[3];
         mode = TypeMode::TRAIN;
     }
     network.init_network(loadfile, chessfile);
