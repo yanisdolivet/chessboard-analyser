@@ -1,6 +1,8 @@
 import argparse
 import sys
 import os
+import numpy as np
+from FENParser import FENParser
 
 ERROR_CODE = 84
 
@@ -89,23 +91,16 @@ def main():
     try:
         is_train, loadfile, chessfile, savefile = parse_arguments()
 
-        print(f"Mode: {'TRAINING' if is_train else 'PREDICTION'}")
-        print(f"Load File: {loadfile}")
-        print(f"Chess File: {chessfile}")
-        if is_train:
-            print(f"Save File: {savefile}")
+        parser = FENParser()
+        X_data, Y_targets = parser.parse_file(chessfile)
 
-        # --- Ici, vous appelleriez les fonctions d'initialisation et d'entraînement/prédiction ---
-        # network = MyTorchNetwork(loadfile)
-        # inputs, targets = FENParser.parse(chessfile)
+        if len(X_data) == 0:
+            print("Error: No valid FEN data found in the file.", file=sys.stderr)
+            sys.exit(ERROR_CODE)
 
-        # if is_train:
-        #     network.train(inputs, targets, savefile)
-        # else:
-        #     network.predict(inputs)
+        print(f"Data loaded: {len(X_data)} examples.")
 
     except SystemExit:
-        # argparser peut sortir directement, mais nous voulons garantir le code 84 [cite: 13]
         if sys.exc_info()[1].code != 0:
             sys.exit(ERROR_CODE)
 
