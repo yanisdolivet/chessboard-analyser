@@ -1,8 +1,9 @@
 import argparse
 import sys
 import os
-import numpy as np
+
 from FENParser import FENParser
+from ModelLoader import ModelLoader
 
 ERROR_CODE = 84
 
@@ -99,6 +100,12 @@ def main():
             sys.exit(ERROR_CODE)
 
         print(f"Data loaded: {len(X_data)} examples.")
+
+        loader = ModelLoader()
+        layer_sizes, weights, biases = loader.load_network(loadfile)
+
+        print(f"Network loaded. Topology: {layer_sizes}")
+        print(f"Weights/Biases loaded for {len(weights)} layers.")
 
     except SystemExit:
         if sys.exc_info()[1].code != 0:
