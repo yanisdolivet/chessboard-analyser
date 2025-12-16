@@ -9,7 +9,7 @@
 
 #include "Matrix.hpp"
 
-#define INPUTS 64
+#define INPUTS 768
 
 class Analyzer {
     public:
