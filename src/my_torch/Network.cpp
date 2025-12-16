@@ -15,6 +15,38 @@ my_torch::Network::~Network()
 {
 }
 
+my_torch::Matrix softmax(const my_torch::Matrix& input)
+{
+    int num_rows = input.getRows(); // N (Batch Size)
+    int num_cols = input.getCols(); // O (Output Size, ici 3)
+
+    // La matrice de résultat aura la même dimension N x O
+    my_torch::Matrix result(num_rows, num_cols);
+
+    // Itérer sur chaque exemple (ligne) du lot
+    for (int r = 0; r < num_rows; ++r) {
+        double sum_exp = 0.0;
+
+        // 1. Calculer exp(x) pour tous les éléments de la ligne r et sommer
+        for (int c = 0; c < num_cols; ++c) {
+            // Note: Pour une meilleure stabilité numérique, il est souvent préférable de soustraire 
+            // le maximum de la ligne à chaque élément avant l'exponentielle (max trick), mais 
+            // nous allons garder la version simple pour éviter d'introduire trop de complexité.
+            double exp_val = std::exp(input.at(r, c)); 
+            result.at(r, c) = exp_val; // Stocke temporairement exp(x)
+            sum_exp += exp_val;
+        }
+
+        // 2. Diviser chaque exp(x) par la somme totale (normalisation)
+        for (int c = 0; c < num_cols; ++c) {
+            // Applique la formule Softmax: exp(x_i) / sum(exp(x))
+            result.at(r, c) /= sum_exp; 
+        }
+    }
+
+    return result;
+}
+
 void my_torch::Network::init_network(const std::string loadfile, const std::string& chessfile)
 {
     this->parse_untrained_nn(loadfile); // Parse the nn file
@@ -122,43 +154,114 @@ void my_torch::Network::pack_trained_nn(const std::string& trainfile)
 my_torch::Matrix my_torch::Network::forward(Matrix input)
 {
     Matrix current = input;
-    for (auto& layer : layers) {
-        current = layer.forward(current);
+
+    for (size_t i = 0; i < layers.size(); ++i) {
+        current = layers[i].forward(current); // Propagation normale
+
+        if (i == layers.size() - 1 && current.getCols() == 3) {
+            current = softmax(current);
+        }
     }
     return current;
 }
 
 void my_torch::Network::train(double learning_rate, const std::string& savefile)
 {
-    for (int i = 0; i < 50; i++) {
-        for (std::size_t i = 0; i < _matrix_input.size(); i++) {
-            Matrix output = this->forward(_matrix_input[i]);
+    std::size_t num_examples = _matrix_input.size();
+    if (num_examples == 0) {
+        std::cerr << "Training failed: No input data loaded." << std::endl;
+        return;
+    }
+    std::size_t num_batches = (num_examples + BATCH_SIZE - 1) / BATCH_SIZE;
 
-            double output_value = output.at(0, 0);
-            double expected_value = _matrix_output[i].at(0, 0);
+    for (int epoch = 0; epoch < 50; epoch++) {
+        double total_loss = 0.0;
 
-            double error = expected_value - output_value;
-            double loss = error * error;
+        for (std::size_t b = 0; b < num_batches; b++) {
 
-            std::cout << "Loss: " << loss << std::endl;
-            Matrix gradient = output - _matrix_output[i];
-            this->backward(gradient, learning_rate);
+            std::size_t start_index = b * BATCH_SIZE;
+            std::size_t end_index = std::min(start_index + BATCH_SIZE, num_examples);
+            std::size_t current_batch_size = end_index - start_index;
+
+            // 1. CREATION DES MATRICES DE LOT (N x 768 et N x 3)
+            my_torch::Matrix batch_input(current_batch_size, INPUTS, false);
+            my_torch::Matrix batch_expected_output(current_batch_size, 3, false);
+
+            for (std::size_t i = 0; i < current_batch_size; ++i) {
+                // Copie des entrées et sorties dans les matrices N x M
+                for (int c = 0; c < INPUTS; ++c) {
+                    batch_input.at(i, c) = _matrix_input[start_index + i].at(0, c);
+                }
+                for (int c = 0; c < 3; ++c) { // 3 est la taille de sortie (Nothing, Check, Checkmate)
+                    batch_expected_output.at(i, c) = _matrix_output[start_index + i].at(0, c);
+                }
+            }
+
+            // 2. Propagation avant (Forward Pass) pour tout le lot
+            Matrix output = this->forward(batch_input);
+
+            double batch_loss = 0.0;
+            for (std::size_t i = 0; i < current_batch_size; ++i) {
+                double example_loss = 0.0;
+                for (int c = 0; c < 3; ++c) {
+                    double y = batch_expected_output.at(i, c);
+                    double hat_y = output.at(i, c);
+
+                    if (y > 0.0 && hat_y > 1e-12) {
+                        example_loss += y * std::log(hat_y);
+                    }
+                }
+                batch_loss += -example_loss;
+            }
+            total_loss += batch_loss;
+
+            // 4. Calcul du Gradient initial (dL/dZ_last)
+            // Gradient initial = ^y - y (N x 3)
+            Matrix gradient = output - batch_expected_output;
+
+            // Le gradient doit être moyenné par la taille du lot
+            Matrix averaged_gradient = gradient * (1.0 / current_batch_size);
+
+            // 5. Rétropropagation (Backward Pass)
+            this->backward(averaged_gradient, learning_rate);
         }
+
+        // Affichage de la perte moyenne de l'époque
+        std::cout << "Epoch " << epoch + 1 << " Loss: " << total_loss / num_examples << std::endl;
     }
     this->pack_trained_nn(savefile);
 }
 
 void my_torch::Network::predict()
 {
-    Matrix output;
     for (std::size_t i = 0; i < _matrix_input.size(); i++) {
-            output = this->forward(_matrix_input[i]);
+        my_torch::Matrix output = this->forward(_matrix_input[i]);
+
+        if (output.getCols() < 3) {
+            std::cerr << "Prediction output error: Expected 3 classes, got " << output.getCols() << std::endl;
+            return;
+        }
+
+        double max_prob = -1.0;
+        int predicted_index = -1;
+
+        for (int j = 0; j < 3; ++j) {
+            if (output.at(0, j) > max_prob) {
+                max_prob = output.at(0, j);
+                predicted_index = j;
+            }
+        }
+
+        if (predicted_index == 0) {
+            std::cout << "Nothing" << std::endl;
+        } else if (predicted_index == 1) {
+            std::cout << "Check" << std::endl;
+        } else if (predicted_index == 2) {
+            std::cout << "Checkmate" << std::endl;
+        } else {
+            std::cout << "Prediction Error (Index " << predicted_index << ")" << std::endl;
+        }
     }
-    const double prediction = output.at(0, 0);
-    if (prediction <= 0.5)
-        std::cout << "Nothing" << std::endl;
-    else if (prediction <= 1.0)
-        std::cout << "Check" << std::endl;
 }
 
 void my_torch::Network::backward(Matrix& gradient, double learning_rate)

@@ -24,6 +24,19 @@ my_torch::Matrix::Matrix(int rows, int cols, bool is_random)
     }
 }
 
+my_torch::Matrix my_torch::Matrix::sumRows() const
+{
+    Matrix result(1, cols);
+    for (int c = 0; c < cols; ++c) {
+        double sum = 0.0;
+        for (int r = 0; r < rows; ++r) {
+            sum += at(r, c);
+        }
+        result.at(0, c) = sum;
+    }
+    return result;
+}
+
 my_torch::Matrix my_torch::Matrix::multiply(const Matrix& other) const
 {
     if (cols != other.rows) {

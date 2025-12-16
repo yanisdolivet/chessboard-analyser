@@ -12,11 +12,13 @@ double relu(double in)
     return (in < 0) ? (double)0: in;
 }
 
-double sigmoid(double in) {
-    return 1/1+std::exp(-in);
+double sigmoid(double in)
+{
+    return 1 / (1 + std::exp(-in));
 }
 
-double none(double in) {
+double none(double in)
+{
     return in;
 }
 
@@ -28,6 +30,8 @@ my_torch::Layer::Layer(u_int32_t input_size, u_int32_t output_size)
         this->_act_func = relu;
     } else if (_activation_type == "sigmoid") {
         this->_act_func = sigmoid;
+    } else if (_activation_type == "softmax") {
+        // R A S
     } else {
         this->_act_func = none;
     }
@@ -35,16 +39,26 @@ my_torch::Layer::Layer(u_int32_t input_size, u_int32_t output_size)
 
 my_torch::Matrix my_torch::Layer::forward(const Matrix& input)
 {
-    this->cache_input = input;
+    this->cache_input = input; // Input est N x I
 
-    Matrix z = input.multiply(this->weights) + this->biases;
+    // Multiplication: input (N x I) * weights (I x O) -> z (N x O)
+    Matrix z = input.multiply(this->weights); 
+    
+    // CORRECTION DU BIAS BROADCASTING:
+    // Z est N x O, Bias est 1 x O. On doit ajouter Bias à chaque ligne de Z.
+    for (int r = 0; r < z.getRows(); ++r) {
+        for (int c = 0; c < z.getCols(); ++c) {
+            z.at(r, c) += this->biases.at(0, c); // Ajoute le bias (ligne 0)
+        }
+    }
+    // Fin de la correction
+
     this->cache_z = z;
 
     Matrix a = z.apply(this->_act_func);
     this->cache_a = a;
     return a;
 }
-
 
 void my_torch::Layer::setWeights(std::vector<double> weights)
 {
@@ -72,7 +86,6 @@ double my_torch::Layer::activate_derivative(double x) {
 
 my_torch::Matrix my_torch::Layer::backward(const Matrix& gradient, double learning_rate)
 {
-
     Matrix dZ = this->cache_z;
 
     for (int i = 0; i < dZ.getRows(); i++) {
@@ -84,20 +97,24 @@ my_torch::Matrix my_torch::Layer::backward(const Matrix& gradient, double learni
             dZ.at(i, j) = grad_val * derivative;
         }
     }
+    Matrix input_T = this->cache_input.transpose(); // I x N (Input_Size x Batch_Size)
+    Matrix dW = input_T.multiply(dZ);               // I x N * N x O -> I x O (Input_Size x Output_Size)
 
-    Matrix input_T = this->cache_input.transpose();
-    Matrix dW = input_T.multiply(dZ);
+    Matrix dB = dZ.sumRows();                       // N x O -> 1 x O
 
-    Matrix dB = dZ;
+    Matrix weights_T = this->weights.transpose(); // O x I
+    Matrix dX_prev = dZ.multiply(weights_T);      // N x O * O x I -> N x I (Propagé à la couche précédente)
 
-    Matrix weights_T = this->weights.transpose();
-    Matrix dX_prev = dZ.multiply(weights_T);
-
+    // 5. Mise à jour des Poids et des Biais (GD)
+    
     Matrix step_W = dW * learning_rate;
     Matrix step_B = dB * learning_rate;
 
+    // Les dimensions sont maintenant compatibles :
+    // this->weights (I x O) - step_W (I x O)
     this->weights = this->weights - step_W;
-    this->biases  = this->biases - step_B;
+    // this->biases (1 x O) - step_B (1 x O)
+    this->biases  = this->biases - step_B;  
 
     return dX_prev;
 }
