@@ -55,10 +55,21 @@ class Network:
             avg_loss = total_loss / len(self.matrix_input)
             print(f"Epoch {epoch + 1}/50 - Loss: {avg_loss:.6f}")
 
-    def predict(self):
-        for input in self.matrix_input:
-            output = self.forward(input)
-        pass
+    def predict(self, input):
+        """Predict the class for a given input.
+        Args:
+            input: Input data to predict.
+        Returns:
+            int: Predicted class index.
+        """
+        output = self.forward(input)
+        prediction = np.argmax(output)
+        if (prediction == 0):
+            print("Nothing")
+        elif (prediction == 1):
+            print("Check")
+        elif (prediction == 2):
+            print("Checkmate")
 
     def forward(self, input) -> np.array:
         current = input
@@ -67,5 +78,18 @@ class Network:
         return current
 
     def backward(self, gradient, learning_rate=0.01):
-        pass
+        """Perform backward pass through all layers.
+        Args:
+            gradient (numpy.ndarray): Initial gradient from loss function.
+            learning_rate (float): Learning rate for updates.
+
+        Returns:
+            numpy.ndarray: Gradient propagated to input layer.
+        """
+        current_gradient = gradient
+
+        for i in range(len(self.layers) - 1, -1, -1):
+            current_gradient = self.layers[i].backward(current_gradient, learning_rate)
+
+        return current_gradient
 

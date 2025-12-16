@@ -113,7 +113,7 @@ def main():
         if (is_train):
             network.train(0.01, savefile)
         else:
-            pass
+            network.predict()
 
     except SystemExit:
         if sys.exc_info()[1].code != 0:
