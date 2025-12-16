@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
+
 import argparse
 import sys
 import os
 
-from FENParser import FENParser
-from ModelLoader import ModelLoader
+from src_py.analyzer.FENParser import FENParser
+from src_py.analyzer.ModelLoader import ModelLoader
+from src_py.my_torch.Network import Network
 
 ERROR_CODE = 84
 
@@ -104,8 +107,13 @@ def main():
         loader = ModelLoader()
         layer_sizes, weights, biases = loader.load_network(loadfile)
 
-        print(f"Network loaded. Topology: {layer_sizes}")
-        print(f"Weights/Biases loaded for {len(weights)} layers.")
+        network = Network(layer_sizes, X_data, Y_targets)
+        network.createLayer(weights, biases)
+
+        if (is_train):
+            network.train(0.01, savefile)
+        else:
+            pass
 
     except SystemExit:
         if sys.exc_info()[1].code != 0:
