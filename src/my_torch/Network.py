@@ -12,6 +12,7 @@ from src.my_torch.Layer import Layer
 
 MAGIC_NUMBER = 0x48435254
 ERROR_CODE = 84
+EPOCH = 100
 
 class Network:
 
@@ -40,7 +41,7 @@ class Network:
             self.layers.append(layer)
 
     # Mini batch and Shuffling
-    def train(self, learningRate, saveFile, batch_size=64):
+    def train(self, learningRate, saveFile, batch_size=32):
         """Train the network using the input and output data.
         Args:
             learningRate (float): Learning rate for gradient descent.
@@ -48,7 +49,7 @@ class Network:
         """
         num_samples = len(self.matrix_input)
 
-        for epoch in range(50):
+        for epoch in range(EPOCH):
             indices = np.arange(num_samples)
             np.random.shuffle(indices)
             X_shuffled = self.matrix_input[indices]
@@ -79,9 +80,8 @@ class Network:
             if (epoch + 1) % 10 == 0:
                 learningRate *= 0.5
                 print(f"Learning rate reduced to {learningRate:.5f}")
-
-            avg_loss = total_loss / num_samples
-            print(f"Epoch {epoch + 1}/50 - Loss: {avg_loss:.6f}")
+                avg_loss = total_loss / num_samples
+                print(f"Epoch {epoch + 1}/{EPOCH} - Loss: {avg_loss:.6f}")
 
         self.saveTrainedNetwork(saveFile)
         print(f"Network saved to {saveFile} after epoch {epoch + 1}")
@@ -93,20 +93,19 @@ class Network:
         Returns:
             int: Predicted class index.
         """
-        # Propagation avant sur l'ensemble des entrées (en mode test)
         output = self.forward(self.matrix_input, training=False)
 
-        # Récupération de l'index avec la plus haute probabilité pour chaque ligne
+        print(f"output = {output}")
         predictions = np.argmax(output, axis=1)
 
         mapping = {0: "Nothing", 1: "Check", 2: "Checkmate"}
         for p in predictions:
             print(mapping.get(p, "Error"))
 
-    def forward(self, input) -> np.array:
+    def forward(self, input, training=True) -> np.array:
         current = input
         for i in range(len(self.layers)):
-            current = self.layers[i].forward(current)
+            current = self.layers[i].forward(current, training)
 
             if i == len(self.layers) - 1:
                 shift_current = current - np.max(current, axis=1, keepdims=True)
