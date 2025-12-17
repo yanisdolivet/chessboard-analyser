@@ -5,8 +5,13 @@
 ## Network
 ##
 
+import struct
+import sys
 from src_py.my_torch.Layer import Layer
 import numpy as np
+
+MAGIC_NUMBER = 0x48435254
+ERROR_CODE = 84
 
 class Network:
 
@@ -54,15 +59,19 @@ class Network:
 
             avg_loss = total_loss / len(self.matrix_input)
             print(f"Epoch {epoch + 1}/50 - Loss: {avg_loss:.6f}")
+        self.saveTrainedNetwork(saveFile)
+        print(f"Network saved to {saveFile} after epoch {epoch + 1}")
 
-    def predict(self, input):
+    def predict(self):
         """Predict the class for a given input.
         Args:
             input: Input data to predict.
         Returns:
             int: Predicted class index.
         """
-        output = self.forward(input)
+        output
+        for i in range(len(self.matrix_input)):
+            output = self.forward(self.matrix_input[i])
         prediction = np.argmax(output)
         if (prediction == 0):
             print("Nothing")
@@ -93,3 +102,20 @@ class Network:
 
         return current_gradient
 
+    def saveTrainedNetwork(self, filePath):
+        try:
+            with open(filePath, 'wb') as f:
+                f.write(struct.pack('II', MAGIC_NUMBER, len(self.layerSize)))
+
+                f.write(struct.pack(f'{len(self.layerSize)}I', *self.layerSize))
+
+                for w in self.layers:
+                    w_flat = w.weights.flatten()
+                    f.write(struct.pack(f'{len(w_flat)}f', *w_flat))
+                for b in self.layers:
+                    b_flat = b.biases.flatten()
+                    f.write(struct.pack(f'{len(b_flat)}f', *b_flat))
+            print(f"Saved trained network to {filePath}")
+        except IOError as e:
+            print(f"IOError while saving the network: {e}", file=sys.stderr)
+            sys.exit(ERROR_CODE)
