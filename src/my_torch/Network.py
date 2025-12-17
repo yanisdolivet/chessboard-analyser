@@ -7,7 +7,7 @@
 
 import struct
 import sys
-from src_py.my_torch.Layer import Layer
+from src.my_torch.Layer import Layer
 import numpy as np
 
 MAGIC_NUMBER = 0x48435254
@@ -76,6 +76,7 @@ class Network:
         for i in range(len(self.matrix_input)):
             output = self.forward(self.matrix_input[i])
         prediction = np.argmax(output)
+        print(f"Output probabilities: {output}")
         if prediction == 0:
             print("Nothing")
         elif prediction == 1:
