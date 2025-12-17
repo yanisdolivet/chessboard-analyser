@@ -20,6 +20,7 @@ namespace my_torch {
         ~Matrix() = default;
 
         Matrix multiply(const Matrix& other) const;
+        Matrix sumRows() const;
         Matrix transpose() const;
         Matrix operator+(const Matrix& other) const;
         Matrix operator-(const Matrix& other) const;

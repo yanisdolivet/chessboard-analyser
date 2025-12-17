@@ -34,6 +34,7 @@ namespace my_torch {
 
         protected:
         private:
+            const int BATCH_SIZE = 64;
             std::vector<Layer> layers;
             int _layerCount;
             std::vector<uint32_t> _layer_size;

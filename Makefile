@@ -8,101 +8,85 @@
 ## ------------------------------------ ##
 ##              VARIABLES               ##
 
-CC                  := g++
-CFLAGS              := -std=c++17 -Wall -Wextra -pthread
-INCLUDES            := -I./include -I./include/analyzer -I./include/my_torch
-DFLAGS              := -g3
-TFLAGS              := -lcriterion --coverage
+PYTHON              := python3
+VENV_DIR            := .venv
+VENV_PYTHON         := $(VENV_DIR)/bin/python
+VENV_PIP            := $(VENV_DIR)/bin/pip
 
 ANALYZER_EXEC       := my_torch_analyzer
 GENERATOR_EXEC      := my_torch_generator
-TEST_EXECUTABLE     := unit_tests
+TEST_EXECUTABLE     := run_tests.py
 
-OBJDIR              := obj
 SRCDIR              := src
 TOOLSDIR            := tools
 TESTDIR             := tests
 GENERATOR_SRCDIR    := $(TOOLSDIR)/generator
 
-## Source files
-ANALYZER_SRCDIR     := $(SRCDIR)/analyzer
-MY_TORCH_SRCDIR     := $(SRCDIR)/my_torch
+MAIN_ANALYZER       := $(SRCDIR)/my_torch_analyzer.py
+MAIN_GENERATOR      := $(GENERATOR_SRCDIR)/builder.py
 
-ANALYZER_SOURCES    := $(shell find $(ANALYZER_SRCDIR) -name '*.cpp')
-MY_TORCH_SOURCES    := $(shell find $(MY_TORCH_SRCDIR) -name '*.cpp')
-MAIN_SOURCE         := $(SRCDIR)/main.cpp
-MAIN_GENERATOR		:= $(GENERATOR_SRCDIR)/builder.py
-
-## Object files
-ANALYZER_OBJECTS    := $(patsubst $(ANALYZER_SRCDIR)/%.cpp,\
-						$(OBJDIR)/analyzer/%.o,$(ANALYZER_SOURCES))
-MY_TORCH_OBJECTS    := $(patsubst $(MY_TORCH_SRCDIR)/%.cpp,\
-						$(OBJDIR)/my_torch/%.o,$(MY_TORCH_SOURCES))
-MAIN_OBJECT         := $(OBJDIR)/main.o
-
-
-## Test files
-TEST_SOURCES        := $(shell find $(TESTDIR) -name '*.cpp')
-TEST_OBJECTS        := $(patsubst $(TESTDIR)/%.cpp,\
-						$(OBJDIR)/tests/%.o,$(TEST_SOURCES))
-
+REQUIREMENTS        := requirements.txt
 
 RESET               := \033[0m
 GREEN               := \033[32m
 BLUE                := \033[34m
 CYAN                := \033[36m
 RED                 := \033[31m
-
-DEBUG ?= 1
-ifeq ($(DEBUG), 1)
-    CFLAGS += $(DFLAGS)
-endif
+YELLOW              := \033[33m
 
 ## ------------------------------------ ##
 ##                RULES                 ##
 
-all: $(ANALYZER_EXEC)
-	@echo "$(GREEN)[✔] Project compiled successfully.$(RESET)"
+all: venv $(ANALYZER_EXEC) $(GENERATOR_EXEC)
+	@echo "$(GREEN)[✔] Project setup successfully.$(RESET)"
 
-$(ANALYZER_EXEC): $(ANALYZER_OBJECTS) $(MY_TORCH_OBJECTS) $(MAIN_OBJECT)
-	@mkdir -p $(@D)
-	@echo "$(CYAN)[➜] Linking $(ANALYZER_EXEC)$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@
-	cp $(MAIN_GENERATOR) $(GENERATOR_EXEC)
-	chmod 755 $(GENERATOR_EXEC)
-	@echo "$(GREEN)[✔] Analyzer compiled: $(ANALYZER_EXEC)$(RESET)"
+# Create virtual environment
+venv: $(VENV_DIR)/bin/activate
 
-$(OBJDIR)/main.o: $(SRCDIR)/main.cpp
-	@mkdir -p $(@D)
-	@echo "$(BLUE)[~] Compiling: $<$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+$(VENV_DIR)/bin/activate: $(REQUIREMENTS)
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "$(CYAN)[➜] Creating virtual environment$(RESET)"; \
+		$(PYTHON) -m venv $(VENV_DIR); \
+	fi
+	@echo "$(CYAN)[➜] Installing dependencies$(RESET)"
+	@$(VENV_PIP) install -q --upgrade pip
+	@$(VENV_PIP) install -q -r $(REQUIREMENTS)
+	@echo "$(GREEN)[✔] Virtual environment ready$(RESET)"
 
-$(OBJDIR)/analyzer/%.o: $(ANALYZER_SRCDIR)/%.cpp
-	@mkdir -p $(@D)
-	@echo "$(BLUE)[~] Compiling analyzer: $<$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+# Create analyzer executable wrapper
+$(ANALYZER_EXEC): $(MAIN_ANALYZER) venv
+	@echo "$(CYAN)[➜] Creating $(ANALYZER_EXEC)$(RESET)"
+	@cp $(MAIN_ANALYZER) $(ANALYZER_EXEC)
+	@chmod +x $(ANALYZER_EXEC)
+	@echo "$(GREEN)[✔] Analyzer created: $(ANALYZER_EXEC)$(RESET)"
 
-$(OBJDIR)/my_torch/%.o: $(MY_TORCH_SRCDIR)/%.cpp
-	@mkdir -p $(@D)
-	@echo "$(BLUE)[~] Compiling my_torch: $<$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+# Create generator executable
+$(GENERATOR_EXEC): $(MAIN_GENERATOR) venv
+	@echo "$(CYAN)[➜] Creating $(GENERATOR_EXEC)$(RESET)"
+	@cp $(MAIN_GENERATOR) $(GENERATOR_EXEC)
+	@chmod +x $(GENERATOR_EXEC)
+	@echo "$(GREEN)[✔] Generator created: $(GENERATOR_EXEC)$(RESET)"
 
-$(OBJDIR)/tests/%.o: $(TESTDIR)/%.cpp
-	@mkdir -p $(@D)
-	@echo "$(BLUE)[~] Compiling test: $<$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+# Check Python syntax
+check: venv
+	@echo "$(CYAN)[➜] Checking Python syntax$(RESET)"
+	@$(VENV_PYTHON) -m py_compile $(MAIN_ANALYZER) && echo "$(GREEN)[✔] Analyzer syntax OK$(RESET)" || echo "$(RED)[✘] Analyzer syntax error$(RESET)"
+	@$(VENV_PYTHON) -m py_compile $(MAIN_GENERATOR) && echo "$(GREEN)[✔] Generator syntax OK$(RESET)" || echo "$(RED)[✘] Generator syntax error$(RESET)"
+	@find $(SRCDIR) -name "*.py" -exec $(VENV_PYTHON) -m py_compile {} \; && echo "$(GREEN)[✔] All modules syntax OK$(RESET)"
 
 clean:
-	@rm -rf $(OBJDIR)
-	@rm -f $(TEST_EXECUTABLE)
-	@rm -f *.gcno
-	@rm -f *.gcda
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete
+	@find . -type f -name "*.pyo" -delete
+	@find . -type f -name "*.gcno" -delete
+	@find . -type f -name "*.gcda" -delete
 	@rm -f vgcore.*
-	@echo "$(RED)[✘] Objects and coverage files removed.$(RESET)"
+	@echo "$(RED)[✘] Python cache files removed.$(RESET)"
 
 fclean: clean
-	@rm -f $(ANALYZER_EXEC) $(GENERATOR_EXEC) $(TEST_EXECUTABLE)
-	@echo "$(RED)[✘] Executables removed.$(RESET)"
+	@rm -rf $(VENV_DIR)
+	@rm -f $(ANALYZER_EXEC) $(GENERATOR_EXEC)
+	@echo "$(RED)[✘] Executables and virtual environment removed.$(RESET)"
 
 re: fclean
 	@$(MAKE) all --no-print-directory
@@ -110,16 +94,31 @@ re: fclean
 ## ------------------------------------ ##
 ##              UNIT TESTS              ##
 
-tests_run:
-	@echo "$(CYAN)[➜] Compiling tests$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) $(TEST_SOURCES) $(ANALYZER_SOURCES) \
-	$(MY_TORCH_SOURCES) $(TFLAGS) -o $(TEST_EXECUTABLE)
-	@echo "$(GREEN)[✔] Unit tests executable created: $(TEST_EXECUTABLE)$(RESET)"
+tests_run: venv
 	@echo "$(CYAN)[➜] Running unit tests$(RESET)"
-	@./$(TEST_EXECUTABLE)
+	@if [ -f "$(TESTDIR)/$(TEST_EXECUTABLE)" ]; then \
+		$(VENV_PYTHON) $(TESTDIR)/$(TEST_EXECUTABLE); \
+	elif [ -d "$(TESTDIR)" ] && [ -n "$$(find $(TESTDIR) -name 'test_*.py')" ]; then \
+		$(VENV_PYTHON) -m pytest $(TESTDIR) -v; \
+	else \
+		echo "$(YELLOW)[!] No tests found$(RESET)"; \
+	fi
 
-coverage: tests_run
-	@echo "$(CYAN)[➜] Generating code coverage report$(RESET)"
-	@gcovr --exclude $(TESTDIR)
+# Install development dependencies
+dev: venv
+	@echo "$(CYAN)[➜] Installing development dependencies$(RESET)"
+	@$(VENV_PIP) install -q pytest pytest-cov pylint black flake8
+	@echo "$(GREEN)[✔] Development dependencies installed$(RESET)"
 
-.PHONY: all clean fclean re tests_run coverage
+# Run linter
+lint: venv
+	@echo "$(CYAN)[➜] Running linter$(RESET)"
+	@$(VENV_PYTHON) -m flake8 $(SRCDIR) --count --select=E9,F63,F7,F82 --show-source --statistics || true
+	@echo "$(GREEN)[✔] Linting complete$(RESET)"
+
+# Format code
+format: venv
+	@echo "$(CYAN)[➜] Formatting code$(RESET)"
+	@$(VENV_PYTHON) -m black $(SRCDIR) $(TOOLSDIR) || echo "$(YELLOW)[!] black not installed, run 'make dev'$(RESET)"
+
+.PHONY: all venv clean fclean re check tests_run dev lint format
