@@ -3,6 +3,7 @@ import sys
 
 ERROR_CODE = 84
 
+
 class FENParser:
     """
     Gère le parsing des fichiers FEN pour générer des tableaux NumPy
@@ -10,8 +11,18 @@ class FENParser:
     """
 
     PIECE_INDEX = {
-        'P': 0, 'N': 1, 'B': 2, 'R': 3, 'Q': 4, 'K': 5,
-        'p': 6, 'n': 7, 'b': 8, 'r': 9, 'q': 10, 'k': 11
+        "P": 0,
+        "N": 1,
+        "B": 2,
+        "R": 3,
+        "Q": 4,
+        "K": 5,
+        "p": 6,
+        "n": 7,
+        "b": 8,
+        "r": 9,
+        "q": 10,
+        "k": 11,
     }
 
     INPUT_SIZE = 768
@@ -29,10 +40,10 @@ class FENParser:
 
         for char in board_position:
 
-            if char == '/':
+            if char == "/":
                 continue
 
-            elif '1' <= char <= '8':
+            elif "1" <= char <= "8":
                 nb_empty_squares = int(char)
                 board_vector.extend([0.0] * (nb_empty_squares * 12))
 
@@ -43,7 +54,10 @@ class FENParser:
                 board_vector.extend(one_hot_segment)
 
         if len(board_vector) != self.INPUT_SIZE:
-            print(f"Warning: FEN produced {len(board_vector)} features, expected {self.INPUT_SIZE}.", file=sys.stderr)
+            print(
+                f"Warning: FEN produced {len(board_vector)} features, expected {self.INPUT_SIZE}.",
+                file=sys.stderr,
+            )
             return np.array([])
 
         return np.array(board_vector, dtype=np.float32)
@@ -59,7 +73,10 @@ class FENParser:
         elif result_word == "Checkmate":
             return np.array([0.0, 0.0, 1.0], dtype=np.float32)
         else:
-            print(f"Warning: Unknown result word '{result_word}'. Mapping to Nothing.", file=sys.stderr)
+            print(
+                f"Warning: Unknown result word '{result_word}'. Mapping to Nothing.",
+                file=sys.stderr,
+            )
             return np.array([1.0, 0.0, 0.0], dtype=np.float32)
 
     def parse_file(self, chessfile: str) -> tuple[np.ndarray, np.ndarray]:
@@ -70,7 +87,7 @@ class FENParser:
         output_targets = []
 
         try:
-            with open(chessfile, 'r') as f:
+            with open(chessfile, "r") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -80,12 +97,16 @@ class FENParser:
 
                     board_position_part = parts[0]
 
-                    if len(parts) >= 2 and parts[-1] in ["Nothing", "Check", "Checkmate"]:
+                    if len(parts) >= 2 and parts[-1] in [
+                        "Nothing",
+                        "Check",
+                        "Checkmate",
+                    ]:
                         result_word = parts[-1]
                     else:
                         result_word = "Nothing"
 
-                    board_fen = board_position_part.split(' ')[0]
+                    board_fen = board_position_part.split(" ")[0]
 
                     X_vector = self._encode_board_position(board_fen)
 

@@ -5,6 +5,7 @@ import sys
 MAGIC_NUMBER = 0x48435254
 ERROR_CODE = 84
 
+
 class ModelLoader:
     """
     Gère la lecture des fichiers binaires du réseau neuronal (.nn)
@@ -21,14 +22,17 @@ class ModelLoader:
             print("Error: Invalid header size or empty file.", file=sys.stderr)
             sys.exit(ERROR_CODE)
 
-        magic_number, layer_count = struct.unpack('II', header_data)
+        magic_number, layer_count = struct.unpack("II", header_data)
 
         if magic_number != MAGIC_NUMBER:
             print("Error: Invalid magic number in NN file.", file=sys.stderr)
             sys.exit(ERROR_CODE)
 
         if layer_count < 2:
-            print("Error: Network must have at least an input and an output layer.", file=sys.stderr)
+            print(
+                "Error: Network must have at least an input and an output layer.",
+                file=sys.stderr,
+            )
             sys.exit(ERROR_CODE)
 
         return layer_count
@@ -40,7 +44,7 @@ class ModelLoader:
             print("Error: Missing layer size information.", file=sys.stderr)
             sys.exit(ERROR_CODE)
 
-        layer_sizes = list(struct.unpack(f'{layer_count}I', topology_data))
+        layer_sizes = list(struct.unpack(f"{layer_count}I", topology_data))
         return layer_sizes
 
     def _read_and_reshape_weights(self, f, layer_sizes: list[int]) -> list[np.ndarray]:
@@ -48,24 +52,28 @@ class ModelLoader:
         weights = []
         layer_count = len(layer_sizes)
 
-        total_weights = sum(layer_sizes[i-1] * layer_sizes[i] for i in range(1, layer_count))
+        total_weights = sum(
+            layer_sizes[i - 1] * layer_sizes[i] for i in range(1, layer_count)
+        )
 
         weight_data = f.read(total_weights * 4)
         if len(weight_data) < total_weights * 4:
             print("Error: Incomplete weight data in NN file.", file=sys.stderr)
             sys.exit(ERROR_CODE)
 
-        flat_weights = struct.unpack(f'{total_weights}f', weight_data)
+        flat_weights = struct.unpack(f"{total_weights}f", weight_data)
 
         current_idx = 0
         for i in range(1, layer_count):
-            input_size = layer_sizes[i-1]
+            input_size = layer_sizes[i - 1]
             output_size = layer_sizes[i]
             matrix_size = input_size * output_size
 
             w_segment = flat_weights[current_idx : current_idx + matrix_size]
 
-            w_matrix = np.array(w_segment, dtype=np.float32).reshape((input_size, output_size))
+            w_matrix = np.array(w_segment, dtype=np.float32).reshape(
+                (input_size, output_size)
+            )
 
             weights.append(w_matrix)
             current_idx += matrix_size
@@ -84,7 +92,7 @@ class ModelLoader:
             print("Error: Incomplete bias data in NN file.", file=sys.stderr)
             sys.exit(ERROR_CODE)
 
-        flat_biases = struct.unpack(f'{total_biases}f', bias_data)
+        flat_biases = struct.unpack(f"{total_biases}f", bias_data)
 
         current_idx = 0
         for i in range(1, layer_count):
@@ -103,7 +111,7 @@ class ModelLoader:
         """Fonction principale orchestrant la lecture du fichier .nn."""
 
         try:
-            with open(filepath, 'rb') as f:
+            with open(filepath, "rb") as f:
 
                 layer_count = self._read_header(f)
                 layer_sizes = self._read_layer_sizes(f, layer_count)
