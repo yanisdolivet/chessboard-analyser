@@ -83,10 +83,13 @@ class Network:
         elif prediction == 2:
             print("Checkmate")
 
-    def forward(self, input) -> np.array:
-        current = input
-        for i in range(len(self.layers)):
-            current = self.layers[i].forward(current)
+    def forward(self, input_data) -> np.array:
+        current = input_data
+        for i, layer in enumerate(self.layers):
+            current = layer.forward(current)
+            if i == len(self.layers) - 1:
+                exps = np.exp(current - np.max(current, axis=1, keepdims=True))
+                current = exps / np.sum(exps, axis=1, keepdims=True)
         return current
 
     def backward(self, gradient, learning_rate=0.01):
