@@ -7,9 +7,9 @@ import os
 # Add parent directory to path to enable imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src_py.analyzer.FENParser import FENParser
-from src_py.analyzer.ModelLoader import ModelLoader
-from src_py.my_torch.Network import Network
+from src.analyzer.FENParser import FENParser
+from src.analyzer.ModelLoader import ModelLoader
+from src.my_torch.Network import Network
 
 ERROR_CODE = 84
 
