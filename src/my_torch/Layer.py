@@ -116,14 +116,16 @@ class Layer:
         dZ = gradient * derivative
 
         # gradients pour les paramètres
-        dW = np.dot(self.cache_input.T, dZ)
-        dB = np.sum(dZ, axis=0, keepdims=True)
+        batch_size = self.cache_input.shape[0]
+        dW = np.dot(self.cache_input.T, dZ) / batch_size
+        dB = np.sum(dZ, axis=0, keepdims=True) / batch_size
         dX_prev = np.dot(dZ, self.weights.T)
 
-        # v = beta * v + (1 - beta) * gradient
-        self.v_weights = self.beta * self.v_weights + dW
-        self.v_biases = self.beta * self.v_biases + dB
+        # Momentum
+        self.v_weights = self.beta * self.v_weights + (1 - self.beta) * dW
+        self.v_biases = self.beta * self.v_biases + (1 - self.beta) * dB
 
+        # Update weights and biases
         self.weights -= learning_rate * self.v_weights
         self.biases -= learning_rate * self.v_biases
 

@@ -122,7 +122,7 @@ def main():
         network.createLayer(weights, biases)
 
         if is_train:
-            network.train(0.009, savefile)
+            network.train(0.09, savefile)
         else:
             network.predict()
 
