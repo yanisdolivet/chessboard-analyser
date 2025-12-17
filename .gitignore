@@ -1,8 +1,6 @@
 # Project related ignores
 my_torch_analyzer
 data/
-basic_network*.nn
-trained_network*.nn
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
