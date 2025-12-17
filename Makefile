@@ -17,7 +17,7 @@ ANALYZER_EXEC       := my_torch_analyzer
 GENERATOR_EXEC      := my_torch_generator
 TEST_EXECUTABLE     := run_tests.py
 
-SRCDIR              := src_py
+SRCDIR              := src
 TOOLSDIR            := tools
 TESTDIR             := tests
 GENERATOR_SRCDIR    := $(TOOLSDIR)/generator

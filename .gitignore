@@ -1,5 +1,10 @@
 # Project related ignores
+
+# binary files
 my_torch_analyzer
+my_torch_generator
+
+# data sets
 data/
 
 # Byte-compiled / optimized / DLL files
