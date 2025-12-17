@@ -122,9 +122,7 @@ def main():
         network.createLayer(weights, biases)
 
         if is_train:
-            for learn_rate in [0.01, 0.005, 0.001]:
-                print(f"Training with learning rate: {learn_rate}")
-                network.train(learn_rate, savefile)
+            network.train(0.009, savefile)
         else:
             network.predict()
 
