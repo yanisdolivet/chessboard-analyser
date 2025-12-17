@@ -61,6 +61,7 @@ class Network:
                 # Utilisation des données mélangées
                 input_data = X_shuffled[i:i + batch_size]
                 expected_output = Y_shuffled[i:i + batch_size]
+                current_batch_size = len(input_data)
 
                 # Propagation avant sur le batch complet
                 predicted_output = self.forward(input_data)
@@ -69,17 +70,20 @@ class Network:
                 epsilon = 1e-15
                 predicted_clipped = np.clip(predicted_output, epsilon, 1 - epsilon)
                 # Calcul de la perte moyenne sur le batch (stable)
-                loss = -np.sum(expected_output * np.log(predicted_clipped))
-                total_loss += loss
+                loss = -np.sum(expected_output * np.log(predicted_clipped)) / current_batch_size
+                total_loss += loss * current_batch_size
 
-                gradient = (predicted_output - expected_output) / len(input_data)
+                # Gradient (no division by batch size - already in loss calculation)
+                gradient = (predicted_output - expected_output)
 
                 # Rétropropagation
                 self.backward(gradient, learningRate)
 
-            if (epoch + 1) % 10 == 0:
-                learningRate *= 0.5
+            # Learning rate decay
+            if (epoch + 1) % 20 == 0:
+                learningRate *= 0.9
                 print(f"Learning rate reduced to {learningRate:.5f}")
+            if (epoch + 1) % 10 == 0:
                 avg_loss = total_loss / num_samples
                 print(f"Epoch {epoch + 1}/{EPOCH} - Loss: {avg_loss:.6f}")
 
