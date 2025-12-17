@@ -2,16 +2,21 @@
   "layers": [
     {
       "type": "INPUT",
-      "size": 768,
+      "size": 769,
       "activation": "none"
     },
     {
       "type": "HIDDEN1",
-      "size": 128,
+      "size": 256,
       "activation": "relu"
     },
     {
       "type": "HIDDEN2",
+      "size": 128,
+      "activation": "relu"
+    },
+    {
+      "type": "HIDDEN3",
       "size": 64,
       "activation": "relu"
     },
@@ -22,7 +27,7 @@
     }
   ],
   "hyperparameters": {
-    "learning_rate": 0.01,
+    "learning_rate": 0.005,
     "initialization": "random"
   }
 }

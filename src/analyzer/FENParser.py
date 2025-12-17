@@ -25,14 +25,14 @@ class FENParser:
         "k": 11,
     }
 
-    INPUT_SIZE = 768
+    INPUT_SIZE = 769
 
     OUTPUT_SIZE = 3
 
     def __init__(self):
         pass
 
-    def _encode_board_position(self, board_position: str) -> np.ndarray:
+    def _encode_board_position(self, board_position: str, active_color: str) -> np.ndarray:
         """
         Convertit la partie de position FEN en un vecteur One-Hot de 768 dimensions.
         """
@@ -52,6 +52,9 @@ class FENParser:
                 one_hot_segment = [0.0] * 12
                 one_hot_segment[index] = 1.0
                 board_vector.extend(one_hot_segment)
+
+        turn_val = 1.0 if active_color == 'w' else 0.0
+        board_vector.append(turn_val)
 
         if len(board_vector) != self.INPUT_SIZE:
             print(
@@ -96,6 +99,7 @@ class FENParser:
                     parts = line.split()
 
                     board_position_part = parts[0]
+                    active_color = parts[1] if len(parts) > 1 else 'w'
 
                     if len(parts) >= 2 and parts[-1] in [
                         "Nothing",
@@ -108,7 +112,7 @@ class FENParser:
 
                     board_fen = board_position_part.split(" ")[0]
 
-                    X_vector = self._encode_board_position(board_fen)
+                    X_vector = self._encode_board_position(board_fen, active_color)
 
                     Y_vector = self._map_result_to_one_hot(result_word)
 

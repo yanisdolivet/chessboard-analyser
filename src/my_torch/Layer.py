@@ -7,10 +7,9 @@
 
 import numpy as np
 
-
 class Layer:
 
-    def __init__(self, inputSize, outputSize):
+    def __init__(self, inputSize, outputSize, dropout_rate=0.2):
         """Initialize a neural network layer.
 
         Args:
@@ -19,9 +18,15 @@ class Layer:
         """
         self.inputSize = inputSize
         self.outputSize = outputSize
+        self.dropout_rate = dropout_rate
 
-        self.weights = None
-        self.biases = None
+        limit = np.sqrt(2.0 / self.inputSize)
+        self.weights = np.random.randn(self.inputSize, self.outputSize) * limit
+        self.biases = np.zeros((1, outputSize))
+
+        self.v_weights = np.zeros((inputSize, outputSize))
+        self.v_biases = np.zeros((1, outputSize))
+        self.beta = 0.9 # Coefficient de momentum
 
         # Set activation function
         self.activation_type = "relu"
@@ -33,8 +38,22 @@ class Layer:
         self.cache_input = None
         self.cache_z = None
         self.cache_a = None
+        self.dropout_mask = None
 
-    def forward(self, input):
+    def initialize_weights(self, mode="he"):
+        """
+        Initialise les poids pour éviter la saturation ou la disparition du gradient.
+        """
+        if mode == "he":
+            # ReLU: variance = 2/n_input
+            self.weights = np.random.randn(self.inputSize, self.outputSize) * np.sqrt(2.0 / self.inputSize)
+        elif mode == "xavier":
+            # Sigmoid/Softmax: variance = 1/n_input
+            self.weights = np.random.randn(self.inputSize, self.outputSize) * np.sqrt(1.0 / self.inputSize)
+
+        self.biases = np.zeros((1, self.outputSize))
+
+    def forward(self, input_data, training=True):
         """Perform forward pass through the layer.
 
         Args:
@@ -43,15 +62,22 @@ class Layer:
         Returns:
             numpy.ndarray: Activated output.
         """
-        if input.ndim == 1:
-            input = input.reshape(1, -1)
+        if input_data.ndim == 1:
+            input_data = input_data.reshape(1, -1)
+        self.cache_input = input_data
 
-        self.cache_input = input
-
-        z = np.add(np.dot(input, self.weights), self.biases)
+        z = np.dot(input_data, self.weights) + self.biases
         self.cache_z = z
+        a = self.act_func(z)
 
-        a = (self.act_func)(z)
+        if training and self.dropout_rate > 0:
+            # On crée un masque binaire (0 ou 1) avec une probabilité (1 - rate)
+            self.dropout_mask = (np.random.rand(*a.shape) > self.dropout_rate).astype(np.float32)
+            # On multiplie par le masque et on scale (pour garder la même magnitude)
+            a = (a * self.dropout_mask) / (1.0 - self.dropout_rate)
+        else:
+            self.dropout_mask = None
+
         self.cache_a = a
         return a
 
@@ -82,24 +108,23 @@ class Layer:
         Returns:
             numpy.ndarray: Gradient to pass to the previous layer.
         """
-        # how much to change my answer
-        derivative = self.activate_derivative(self.cache_z)
+        if self.dropout_mask is not None:
+            gradient = (gradient * self.dropout_mask) / (1.0 - self.dropout_rate)
+
+        # calcul du gradient dZ
+        derivative = np.where(self.cache_z > 0, 1, 0) if self.activation_type == "relu" else 1
         dZ = gradient * derivative
 
-        # Calculate how much to change weights and biases
-        input_T = np.transpose(self.cache_input)
-        dW = np.dot(input_T, dZ)
+        # gradients pour les paramètres
+        dW = np.dot(self.cache_input.T, dZ)
         dB = np.sum(dZ, axis=0, keepdims=True)
+        dX_prev = np.dot(dZ, self.weights.T)
 
-        # Pass the error to the previous layer
-        weight_T = np.transpose(self.weights)
-        dX_prev = np.dot(dZ, weight_T)
+        # v = beta * v + (1 - beta) * gradient
+        self.v_weights = self.beta * self.v_weights + dW
+        self.v_biases = self.beta * self.v_biases + dB
 
-        # Update weights and biases
-        step_W = dW * learning_rate
-        step_B = dB * learning_rate
-
-        self.weights = self.weights - step_W
-        self.biases = self.biases - step_B
+        self.weights -= learning_rate * self.v_weights
+        self.biases -= learning_rate * self.v_biases
 
         return dX_prev

@@ -4,7 +4,6 @@ import argparse
 import sys
 import os
 
-# Add parent directory to path to enable imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.analyzer.FENParser import FENParser
@@ -123,7 +122,9 @@ def main():
         network.createLayer(weights, biases)
 
         if is_train:
-            network.train(0.01, savefile)
+            for learn_rate in [0.01, 0.005, 0.001]:
+                print(f"Training with learning rate: {learn_rate}")
+                network.train(learn_rate, savefile)
         else:
             network.predict()
 
