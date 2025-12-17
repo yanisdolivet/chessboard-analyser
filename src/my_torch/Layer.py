@@ -9,7 +9,7 @@ import numpy as np
 
 class Layer:
 
-    def __init__(self, inputSize, outputSize, dropout_rate=0.05):
+    def __init__(self, inputSize, outputSize, activation_type, dropout_rate=0.05):
         """Initialize a neural network layer.
 
         Args:
@@ -29,7 +29,7 @@ class Layer:
         self.beta = 0.9 # Coefficient de momentum
 
         # Set activation function
-        self.activation_type = "relu"
+        self.activation_type = activation_type
         if self.activation_type == "relu":
             self.act_func = lambda x: np.maximum(0, x)
         else:

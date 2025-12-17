@@ -27,8 +27,11 @@ class Network:
         for i in range(1, self.layerCount):
             l1 = self.layerSize[i-1]
             l2 = self.layerSize[i]
+            activation = "relu"
+            if i == self.layerCount - 1:
+                activation = "identity"
 
-            layer = Layer(l1, l2)
+            layer = Layer(l1, l2, activation)
 
             if weights is not None and i-1 < len(weights):
                 layer.weights = weights[i-1]
@@ -99,7 +102,6 @@ class Network:
         """
         output = self.forward(self.matrix_input, training=False)
 
-        print(f"output = {output}")
         predictions = np.argmax(output, axis=1)
 
         mapping = {0: "Nothing", 1: "Check", 2: "Checkmate"}
