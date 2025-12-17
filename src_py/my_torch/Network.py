@@ -13,24 +13,27 @@ import numpy as np
 MAGIC_NUMBER = 0x48435254
 ERROR_CODE = 84
 
+
 class Network:
 
     def __init__(self, layerSize, matrixInput, matrixOutput):
-        self.layerCount = len(layerSize) # number of layer
-        self.layerSize = layerSize # list that contains the nb of parameter for each layer
+        self.layerCount = len(layerSize)  # number of layer
+        self.layerSize = (
+            layerSize  # list that contains the nb of parameter for each layer
+        )
         self.matrix_input = matrixInput
         self.matrix_output = matrixOutput
         self.layers = []
 
     def createLayer(self, weights, biases):
         for i in range(1, self.layerCount):
-            l1 = self.layerSize[i-1]
+            l1 = self.layerSize[i - 1]
             l2 = self.layerSize[i]
 
             layer = Layer(l1, l2)
 
-            layer.weights = weights[i-1]
-            layer.biases = biases[i-1]
+            layer.weights = weights[i - 1]
+            layer.biases = biases[i - 1]
             self.layers.append(layer)
 
     def train(self, learningRate, saveFile):
@@ -69,15 +72,15 @@ class Network:
         Returns:
             int: Predicted class index.
         """
-        output
+        output = None
         for i in range(len(self.matrix_input)):
             output = self.forward(self.matrix_input[i])
         prediction = np.argmax(output)
-        if (prediction == 0):
+        if prediction == 0:
             print("Nothing")
-        elif (prediction == 1):
+        elif prediction == 1:
             print("Check")
-        elif (prediction == 2):
+        elif prediction == 2:
             print("Checkmate")
 
     def forward(self, input) -> np.array:
@@ -104,17 +107,17 @@ class Network:
 
     def saveTrainedNetwork(self, filePath):
         try:
-            with open(filePath, 'wb') as f:
-                f.write(struct.pack('II', MAGIC_NUMBER, len(self.layerSize)))
+            with open(filePath, "wb") as f:
+                f.write(struct.pack("II", MAGIC_NUMBER, len(self.layerSize)))
 
-                f.write(struct.pack(f'{len(self.layerSize)}I', *self.layerSize))
+                f.write(struct.pack(f"{len(self.layerSize)}I", *self.layerSize))
 
                 for w in self.layers:
                     w_flat = w.weights.flatten()
-                    f.write(struct.pack(f'{len(w_flat)}f', *w_flat))
+                    f.write(struct.pack(f"{len(w_flat)}f", *w_flat))
                 for b in self.layers:
                     b_flat = b.biases.flatten()
-                    f.write(struct.pack(f'{len(b_flat)}f', *b_flat))
+                    f.write(struct.pack(f"{len(b_flat)}f", *b_flat))
             print(f"Saved trained network to {filePath}")
         except IOError as e:
             print(f"IOError while saving the network: {e}", file=sys.stderr)

@@ -35,9 +35,15 @@ def load_by_label(src_path: Path):
 
 def main():
     p = argparse.ArgumentParser(description="Generate balanced chess data file")
-    p.add_argument("--input", "-i", default="data/chess-data-1.txt", help="source labeled file")
-    p.add_argument("--output", "-o", default="data/chess-data-balance.txt", help="output file")
-    p.add_argument("--total", "-t", type=int, default=15000, help="approx total lines to generate")
+    p.add_argument(
+        "--input", "-i", default="data/chess-data-1.txt", help="source labeled file"
+    )
+    p.add_argument(
+        "--output", "-o", default="data/chess-data-balance.txt", help="output file"
+    )
+    p.add_argument(
+        "--total", "-t", type=int, default=15000, help="approx total lines to generate"
+    )
     p.add_argument("--seed", type=int, default=None, help="random seed (optional)")
     args = p.parse_args()
 
@@ -51,7 +57,7 @@ def main():
         sys.exit(2)
 
     groups = load_by_label(src)
-    missing = [lab for lab,lst in groups.items() if not lst]
+    missing = [lab for lab, lst in groups.items() if not lst]
     if missing:
         print("ERROR: missing examples for labels:", ",".join(missing), file=sys.stderr)
         sys.exit(3)
@@ -74,7 +80,7 @@ def main():
 
     ctr = Counter()
     for ln in out_lines:
-        ctr[ln.rsplit(" ",1)[1]] += 1
+        ctr[ln.rsplit(" ", 1)[1]] += 1
 
     print(f"WROTE {out}")
     for lab in LABELS:
@@ -82,5 +88,5 @@ def main():
     print("TOTAL", sum(ctr.values()))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
