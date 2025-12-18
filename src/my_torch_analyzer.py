@@ -113,8 +113,6 @@ def main():
             print("Error: No valid FEN data found in the file.", file=sys.stderr)
             sys.exit(ERROR_CODE)
 
-        print(f"Data loaded: {len(X_data)} examples.")
-
         loader = ModelLoader()
         layer_sizes, weights, biases = loader.load_network(loadfile)
 
