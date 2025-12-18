@@ -8,101 +8,66 @@
 ## ------------------------------------ ##
 ##              VARIABLES               ##
 
-CC                  := g++
-CFLAGS              := -std=c++17 -Wall -Wextra -pthread
-INCLUDES            := -I./include -I./include/analyzer -I./include/my_torch
-DFLAGS              := -g3
-TFLAGS              := -lcriterion --coverage
+PYTHON              := python3
 
 ANALYZER_EXEC       := my_torch_analyzer
 GENERATOR_EXEC      := my_torch_generator
-TEST_EXECUTABLE     := unit_tests
+TEST_EXECUTABLE     := run_tests.py
 
-OBJDIR              := obj
 SRCDIR              := src
 TOOLSDIR            := tools
 TESTDIR             := tests
 GENERATOR_SRCDIR    := $(TOOLSDIR)/generator
 
-## Source files
-ANALYZER_SRCDIR     := $(SRCDIR)/analyzer
-MY_TORCH_SRCDIR     := $(SRCDIR)/my_torch
-
-ANALYZER_SOURCES    := $(shell find $(ANALYZER_SRCDIR) -name '*.cpp')
-MY_TORCH_SOURCES    := $(shell find $(MY_TORCH_SRCDIR) -name '*.cpp')
-MAIN_SOURCE         := $(SRCDIR)/main.cpp
-MAIN_GENERATOR		:= $(GENERATOR_SRCDIR)/builder.py
-
-## Object files
-ANALYZER_OBJECTS    := $(patsubst $(ANALYZER_SRCDIR)/%.cpp,\
-						$(OBJDIR)/analyzer/%.o,$(ANALYZER_SOURCES))
-MY_TORCH_OBJECTS    := $(patsubst $(MY_TORCH_SRCDIR)/%.cpp,\
-						$(OBJDIR)/my_torch/%.o,$(MY_TORCH_SOURCES))
-MAIN_OBJECT         := $(OBJDIR)/main.o
-
-
-## Test files
-TEST_SOURCES        := $(shell find $(TESTDIR) -name '*.cpp')
-TEST_OBJECTS        := $(patsubst $(TESTDIR)/%.cpp,\
-						$(OBJDIR)/tests/%.o,$(TEST_SOURCES))
-
+MAIN_ANALYZER       := $(SRCDIR)/my_torch_analyzer.py
+MAIN_GENERATOR      := $(GENERATOR_SRCDIR)/builder.py
 
 RESET               := \033[0m
 GREEN               := \033[32m
 BLUE                := \033[34m
 CYAN                := \033[36m
 RED                 := \033[31m
-
-DEBUG ?= 1
-ifeq ($(DEBUG), 1)
-    CFLAGS += $(DFLAGS)
-endif
+YELLOW              := \033[33m
 
 ## ------------------------------------ ##
 ##                RULES                 ##
 
-all: $(ANALYZER_EXEC)
-	@echo "$(GREEN)[✔] Project compiled successfully.$(RESET)"
+all: $(ANALYZER_EXEC) $(GENERATOR_EXEC)
+	@echo -e "$(GREEN)[✔] Project setup successfully.$(RESET)"
 
-$(ANALYZER_EXEC): $(ANALYZER_OBJECTS) $(MY_TORCH_OBJECTS) $(MAIN_OBJECT)
-	@mkdir -p $(@D)
-	@echo "$(CYAN)[➜] Linking $(ANALYZER_EXEC)$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@
-	cp $(MAIN_GENERATOR) $(GENERATOR_EXEC)
-	chmod 755 $(GENERATOR_EXEC)
-	@echo "$(GREEN)[✔] Analyzer compiled: $(ANALYZER_EXEC)$(RESET)"
+# Create analyzer executable wrapper
+$(ANALYZER_EXEC): $(MAIN_ANALYZER)
+	@echo -e "$(CYAN)[➜] Creating $(ANALYZER_EXEC)$(RESET)"
+	@cp $(MAIN_ANALYZER) $(ANALYZER_EXEC)
+	@chmod +x $(ANALYZER_EXEC)
+	@echo -e "$(GREEN)[✔] Analyzer created: $(ANALYZER_EXEC)$(RESET)"
 
-$(OBJDIR)/main.o: $(SRCDIR)/main.cpp
-	@mkdir -p $(@D)
-	@echo "$(BLUE)[~] Compiling: $<$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+# Create generator executable
+$(GENERATOR_EXEC): $(MAIN_GENERATOR)
+	@echo -e "$(CYAN)[➜] Creating $(GENERATOR_EXEC)$(RESET)"
+	@cp $(MAIN_GENERATOR) $(GENERATOR_EXEC)
+	@chmod +x $(GENERATOR_EXEC)
+	@echo -e "$(GREEN)[✔] Generator created: $(GENERATOR_EXEC)$(RESET)"
 
-$(OBJDIR)/analyzer/%.o: $(ANALYZER_SRCDIR)/%.cpp
-	@mkdir -p $(@D)
-	@echo "$(BLUE)[~] Compiling analyzer: $<$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-$(OBJDIR)/my_torch/%.o: $(MY_TORCH_SRCDIR)/%.cpp
-	@mkdir -p $(@D)
-	@echo "$(BLUE)[~] Compiling my_torch: $<$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-$(OBJDIR)/tests/%.o: $(TESTDIR)/%.cpp
-	@mkdir -p $(@D)
-	@echo "$(BLUE)[~] Compiling test: $<$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+# Check Python syntax
+check:
+	@echo -e "$(CYAN)[➜] Checking Python syntax$(RESET)"
+	@$(PYTHON) -m py_compile $(MAIN_ANALYZER) && echo -e "$(GREEN)[✔] Analyzer syntax OK$(RESET)" || echo -e "$(RED)[✘] Analyzer syntax error$(RESET)"
+	@$(PYTHON) -m py_compile $(MAIN_GENERATOR) && echo -e "$(GREEN)[✔] Generator syntax OK$(RESET)" || echo -e "$(RED)[✘] Generator syntax error$(RESET)"
+	@find $(SRCDIR) -name "*.py" -exec $(PYTHON) -m py_compile {} \; && echo -e "$(GREEN)[✔] All modules syntax OK$(RESET)"
 
 clean:
-	@rm -rf $(OBJDIR)
-	@rm -f $(TEST_EXECUTABLE)
-	@rm -f *.gcno
-	@rm -f *.gcda
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete
+	@find . -type f -name "*.pyo" -delete
+	@find . -type f -name "*.gcno" -delete
+	@find . -type f -name "*.gcda" -delete
 	@rm -f vgcore.*
-	@echo "$(RED)[✘] Objects and coverage files removed.$(RESET)"
+	@echo -e "$(RED)[✘] Python cache files removed.$(RESET)"
 
 fclean: clean
-	@rm -f $(ANALYZER_EXEC) $(GENERATOR_EXEC) $(TEST_EXECUTABLE)
-	@echo "$(RED)[✘] Executables removed.$(RESET)"
+	@rm -f $(ANALYZER_EXEC) $(GENERATOR_EXEC)
+	@echo -e "$(RED)[✘] Executables removed.$(RESET)"
 
 re: fclean
 	@$(MAKE) all --no-print-directory
@@ -111,15 +76,24 @@ re: fclean
 ##              UNIT TESTS              ##
 
 tests_run:
-	@echo "$(CYAN)[➜] Compiling tests$(RESET)"
-	@$(CC) $(CFLAGS) $(INCLUDES) $(TEST_SOURCES) $(ANALYZER_SOURCES) \
-	$(MY_TORCH_SOURCES) $(TFLAGS) -o $(TEST_EXECUTABLE)
-	@echo "$(GREEN)[✔] Unit tests executable created: $(TEST_EXECUTABLE)$(RESET)"
-	@echo "$(CYAN)[➜] Running unit tests$(RESET)"
-	@./$(TEST_EXECUTABLE)
+	@echo -e "$(CYAN)[➜] Running unit tests$(RESET)"
+	@if [ -f "$(TESTDIR)/$(TEST_EXECUTABLE)" ]; then \
+		$(PYTHON) $(TESTDIR)/$(TEST_EXECUTABLE); \
+	elif [ -d "$(TESTDIR)" ] && [ -n "$$(find $(TESTDIR) -name 'test_*.py')" ]; then \
+		$(PYTHON) -m pytest $(TESTDIR) -v; \
+	else \
+		echo -e "$(YELLOW)[!] No tests found$(RESET)"; \
+	fi
 
-coverage: tests_run
-	@echo "$(CYAN)[➜] Generating code coverage report$(RESET)"
-	@gcovr --exclude $(TESTDIR)
+# Run linter
+lint:
+	@echo -e "$(CYAN)[➜] Running linter$(RESET)"
+	@$(PYTHON) -m flake8 $(SRCDIR) --count --select=E9,F63,F7,F82 --show-source --statistics || true
+	@echo -e "$(GREEN)[✔] Linting complete$(RESET)"
 
-.PHONY: all clean fclean re tests_run coverage
+# Format code
+format:
+	@echo -e "$(CYAN)[➜] Formatting code$(RESET)"
+	@$(PYTHON) -m black $(SRCDIR) $(TOOLSDIR) || echo -e "$(YELLOW)[!] black not installed$(RESET)"
+
+.PHONY: all clean fclean re check tests_run lint format

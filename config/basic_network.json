@@ -2,27 +2,27 @@
   "layers": [
     {
       "type": "INPUT",
-      "size": 64,
+      "size": 769,
       "activation": "none"
     },
     {
       "type": "HIDDEN1",
-      "size": 32,
+      "size": 640,
       "activation": "relu"
     },
     {
       "type": "HIDDEN2",
-      "size": 16,
+      "size": 448,
       "activation": "relu"
     },
     {
       "type": "OUTPUT",
-      "size": 1,
+      "size": 3,
       "activation": "sigmoid"
     }
   ],
   "hyperparameters": {
-    "learning_rate": 0.01,
-    "initialization": "random"
+    "learning_rate": 0.005,
+    "initialization": "he_mixed_xavier"
   }
 }
