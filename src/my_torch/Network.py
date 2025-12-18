@@ -29,7 +29,7 @@ class Network:
             l2 = self.layerSize[i]
             activation = "relu"
             if i == self.layerCount - 1:
-                activation = "identity"
+                activation = "sigmoid"
 
             layer = Layer(l1, l2, activation)
 

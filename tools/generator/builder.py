@@ -56,6 +56,23 @@ def create_weights(init_method, layer_size):
     match init_method:
         case "he_normal":
             weights = he_normal(layer_size)
+        case "xavier":
+            weights = []
+            L = len(layer_size)
+            for l in range(1, L):
+                stddev = np.sqrt(1.0 / layer_size[l - 1])
+                w = np.random.normal(0, stddev, (layer_size[l], layer_size[l - 1]))
+                weights.append(w)
+        case "he_mixed_xavier":
+            weights = []
+            L = len(layer_size)
+            for l in range(1, L):
+                if l == L - 1:
+                    stddev = np.sqrt(1.0 / layer_size[l - 1])
+                else:
+                    stddev = np.sqrt(2.0 / layer_size[l - 1])
+                w = np.random.normal(0, stddev, (layer_size[l], layer_size[l - 1]))
+                weights.append(w)
         case "random":
             weights = [
                 np.random.rand(layer_size[l], layer_size[l - 1]) * 0.01
