@@ -23,6 +23,6 @@
   ],
   "hyperparameters": {
     "learning_rate": 0.005,
-    "initialization": "random"
+    "initialization": "he_mixed_xavier"
   }
 }

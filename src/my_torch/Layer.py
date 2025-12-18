@@ -40,19 +40,6 @@ class Layer:
         self.cache_a = None
         self.dropout_mask = None
 
-    def initialize_weights(self, mode="he"):
-        """
-        Initialise les poids pour éviter la saturation ou la disparition du gradient.
-        """
-        if mode == "he":
-            # ReLU: variance = 2/n_input
-            self.weights = np.random.randn(self.inputSize, self.outputSize) * np.sqrt(2.0 / self.inputSize)
-        elif mode == "xavier":
-            # Sigmoid/Softmax: variance = 1/n_input
-            self.weights = np.random.randn(self.inputSize, self.outputSize) * np.sqrt(1.0 / self.inputSize)
-
-        self.biases = np.zeros((1, self.outputSize))
-
     def forward(self, input_data, training=True):
         """Perform forward pass through the layer.
 
@@ -93,7 +80,11 @@ class Layer:
         if self.activation_type == "relu":
             return np.where(z > 0, 1, 0)
         elif self.activation_type == "sigmoid":
-            sig = 1 / (1 + np.exp(-z))
+            sig = np.where(
+                z >= 0,
+                1 / (1 + np.exp(-z)),
+                np.exp(z) / (1 + np.exp(z))
+            )
             return sig * (1 - sig)
         else:
             return np.ones_like(z)
