@@ -3,6 +3,7 @@
 import argparse
 import sys
 import os
+import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -113,17 +114,37 @@ def main():
             print("Error: No valid FEN data found in the file.", file=sys.stderr)
             sys.exit(ERROR_CODE)
 
-        print(f"Data loaded: {len(X_data)} examples.")
+        print(f"Data loaded: {len(X_data)} total.")
 
         loader = ModelLoader()
         layer_sizes, weights, biases = loader.load_network(loadfile)
 
-        network = Network(layer_sizes, X_data, Y_targets)
-        network.createLayer(weights, biases)
-
         if is_train:
-            network.train(0.09, savefile)
+            indices = np.arange(len(X_data))
+            np.random.shuffle(indices)
+            X_data = X_data[indices]
+            Y_targets = Y_targets[indices]
+
+            split_index = int(0.8 * len(X_data))
+
+            X_train = X_data[:split_index]
+            Y_train = Y_targets[:split_index]
+            X_val = X_data[split_index:]
+            Y_val = Y_targets[split_index:]
+
+            print(f"Training set: {len(X_train)} samples.")
+            print(f"Validation set: {len(X_val)} samples.")
+
+            # On init le réseau avec les données d'entraînement
+            network = Network(layer_sizes, X_train, Y_train)
+            network.createLayer(weights, biases)
+            network.train(0.005, savefile, X_val=X_val, Y_val=Y_val)
+
         else:
+            print(f"Predicting on {len(X_data)} samples...")
+
+            network = Network(layer_sizes, X_data, Y_targets)
+            network.createLayer(weights, biases)
             network.predict()
 
     except SystemExit:
