@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import chess
 
 ERROR_CODE = 84
 
@@ -25,45 +26,49 @@ class FENParser:
         "k": 11,
     }
 
-    INPUT_SIZE = 769
+    INPUT_SIZE = 2305
 
     OUTPUT_SIZE = 3
 
     def __init__(self):
         pass
 
-    def _encode_board_position(self, board_position: str, active_color: str) -> np.ndarray:
+    def _encode_board_position(self, board_position: str) -> np.ndarray:
         """
         Convertit la partie de position FEN en un vecteur One-Hot de 768 dimensions.
         """
-        board_vector = []
+        board = chess.Board(board_position)
+        matrix = np.zeros((8, 8, 36), dtype=np.float32)
+        piece_map = {chess.PAWN: 0, chess.KNIGHT: 1, chess.BISHOP: 2, chess.ROOK: 3,
+                 chess.QUEEN: 4, chess.KING: 5}
 
-        for char in board_position:
+        white_attack = np.zeros((8, 8), dtype=bool)
+        black_attack = np.zeros((8, 8), dtype=bool)
 
-            if char == "/":
-                continue
+        for square in chess.SQUARES:
+            if board.is_attacked_by(chess.WHITE, square):
+                white_attack[chess.square_rank(square)][chess.square_file(square)] = True
+            if board.is_attacked_by(chess.BLACK, square):
+                black_attack[chess.square_rank(square)][chess.square_file(square)] = True
 
-            elif "1" <= char <= "8":
-                nb_empty_squares = int(char)
-                board_vector.extend([0.0] * (nb_empty_squares * 12))
+        for square in chess.SQUARES:
+            piece_on_board = board.piece_at(square)
+            if piece_on_board:
+                piece_idx = piece_map[piece_on_board.piece_type] + (6 if piece_on_board.color == chess.BLACK else 0)
+                base_channel = piece_idx * 3
 
-            elif char in self.PIECE_INDEX:
-                index = self.PIECE_INDEX[char]
-                one_hot_segment = [0.0] * 12
-                one_hot_segment[index] = 1.0
-                board_vector.extend(one_hot_segment)
+                row = chess.square_rank(square)
+                col = chess.square_file(square)
+                matrix[row, col, base_channel] = 1.0
 
-        turn_val = 1.0 if active_color == 'w' else 0.0
-        board_vector.append(turn_val)
+                if white_attack[row, col]:
+                    matrix[row, col, base_channel+1] = 1.0
+                if black_attack[row, col]:
+                    matrix[row, col, base_channel+2] = 1.0
 
-        if len(board_vector) != self.INPUT_SIZE:
-            print(
-                f"Warning: FEN produced {len(board_vector)} features, expected {self.INPUT_SIZE}.",
-                file=sys.stderr,
-            )
-            return np.array([])
-
-        return np.array(board_vector, dtype=np.float32)
+        flat_vector = matrix.flatten()
+        turn_val = 1.0 if board.turn == chess.WHITE else 0.0
+        return np.array(np.append(flat_vector, turn_val), dtype=np.float32)
 
     def _map_result_to_one_hot(self, result_word: str) -> np.ndarray:
         """
@@ -98,9 +103,6 @@ class FENParser:
 
                     parts = line.split()
 
-                    board_position_part = parts[0]
-                    active_color = parts[1] if len(parts) > 1 else 'w'
-
                     if len(parts) >= 2 and parts[-1] in [
                         "Nothing",
                         "Check",
@@ -110,9 +112,7 @@ class FENParser:
                     else:
                         result_word = "Nothing"
 
-                    board_fen = board_position_part.split(" ")[0]
-
-                    X_vector = self._encode_board_position(board_fen, active_color)
+                    X_vector = self._encode_board_position(" ".join(parts[:-1]))
 
                     Y_vector = self._map_result_to_one_hot(result_word)
 

@@ -37,6 +37,9 @@ def main():
         parser = FENParser()
         X_data, Y_targets = parser.parse_file(chessfile)
 
+        print(f"First 5 samples of X data:\n{X_data[:5]}")
+        print(f"First 5 samples of Y targets:\n{Y_targets[:5]}")
+
         if len(X_data) == 0:
             print("Error: No valid FEN data.", file=sys.stderr)
             sys.exit(ERROR_CODE)
