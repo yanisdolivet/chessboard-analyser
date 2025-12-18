@@ -48,7 +48,7 @@ jobs:
       - name: Check if GENERATOR exist
         run: |
           BINARY=$(echo "${{ env.GENERATOR }}" | cut -d' ' -f1)
-          BINARY_PATH=$(find "$(pwd)/" -name "$BINARY" -type f -GENERATOR | head -n 1)
+          BINARY_PATH=$(find "$(pwd)/" -name "$BINARY" -type f -executable | head -n 1)
           if [ -z "$BINARY_PATH" ]; then
             echo "Error during compilation !"
             exit 1
@@ -56,7 +56,7 @@ jobs:
       - name: Check if ANALYSER exist
         run: |
           BINARY=$(echo "${{ env.ANALYSER }}" | cut -d' ' -f1)
-          BINARY_PATH=$(find "$(pwd)/" -name "$BINARY" -type f -ANALYSER | head -n 1)
+          BINARY_PATH=$(find "$(pwd)/" -name "$BINARY" -type f -executable | head -n 1)
           if [ -z "$BINARY_PATH" ]; then
             echo "Error during compilation !"
             exit 1
@@ -79,9 +79,8 @@ jobs:
 
       - name: Check if TRAINED_MODEL exist
         run: |
-          MODEL_FILE=$(echo "${{ env.TRAINED_MODEL }}" | cut -d' ' -f1)
-          MODEL_PATH=$(find "$(pwd)/" -name "$MODEL_FILE" -type f -TRAINED_MODEL | head -n 1)
-          if [ -z "$MODEL_PATH" ]; then
+          MODEL_FILE=$(find "$(pwd)/" -maxdepth 1 -type f -name "${{ env.TRAINED_MODEL }}*")
+          if [ -z "$MODEL_FILE" ]; then
             echo "Trained model file not found !"
             exit 1
           fi
