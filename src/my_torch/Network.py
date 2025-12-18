@@ -14,6 +14,7 @@ from src.my_torch.Layer import Layer
 MAGIC_NUMBER = 0x48435254
 ERROR_CODE = 84
 EPOCH = 100
+LREG = 0.001
 
 class Network:
 
@@ -76,7 +77,13 @@ class Network:
                 epsilon = 1e-15
                 predicted_clipped = np.clip(predicted_output, epsilon, 1 - epsilon)
                 loss = -np.sum(expected_output * np.log(predicted_clipped)) / current_batch_size
-                total_loss += loss * current_batch_size
+
+                # L2 regulatization
+                w = 0
+                for i in range(len(self.layers)):
+                    w += np.sum(np.square(self.layers[i].weights))
+                scale_w = (LREG / 2) * w
+                total_loss += (loss + scale_w) * current_batch_size
 
                 # Accuracy Train
                 train_preds = np.argmax(predicted_output, axis=1)
@@ -85,7 +92,7 @@ class Network:
 
                 # Backward
                 gradient = (predicted_output - expected_output)
-                self.backward(gradient, learningRate)
+                self.backward(gradient, learningRate, lambda_reg=LREG)
 
             # Metrics
             avg_loss = total_loss / num_samples
@@ -146,10 +153,20 @@ class Network:
                 current = exps / np.sum(exps, axis=1, keepdims=True)
         return current
 
-    def backward(self, gradient, learning_rate=0.01):
+    def backward(self, gradient, learning_rate=0.01, lambda_reg=LREG):
+        """Perform backward pass through all layers with L2 regularization.
+        
+        Args:
+            gradient (numpy.ndarray): Initial gradient from loss function.
+            learning_rate (float): Learning rate for updates.
+            lambda_reg (float): L2 regularization strength.
+            
+        Returns:
+            numpy.ndarray: Gradient propagated to input layer.
+        """
         current_gradient = gradient
         for i in range(len(self.layers) - 1, -1, -1):
-            current_gradient = self.layers[i].backward(current_gradient, learning_rate)
+            current_gradient = self.layers[i].backward(current_gradient, learning_rate, lambda_reg)
         return current_gradient
 
     def saveTrainedNetwork(self, filePath):
