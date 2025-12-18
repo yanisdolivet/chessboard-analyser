@@ -29,7 +29,7 @@ class Network:
             l2 = self.layerSize[i]
             activation = "relu"
             if i == self.layerCount - 1:
-                activation = "sigmoid"
+                activation = "linear"
 
             layer = Layer(l1, l2, activation)
 
@@ -69,6 +69,9 @@ class Network:
                 # Propagation avant sur le batch complet
                 predicted_output = self.forward(input_data)
 
+                predictions = np.argmax(predicted_output, axis=1)
+                labels = np.argmax(expected_output, axis=1)
+                accuracy = np.mean(predictions == labels)
                 # Cross-Entropy
                 epsilon = 1e-15
                 predicted_clipped = np.clip(predicted_output, epsilon, 1 - epsilon)
@@ -88,7 +91,7 @@ class Network:
                 print(f"Learning rate reduced to {learningRate:.5f}")
             if (epoch + 1) % 10 == 0:
                 avg_loss = total_loss / num_samples
-                print(f"Epoch {epoch + 1}/{EPOCH} - Loss: {avg_loss:.6f}")
+                print(f"Epoch {epoch + 1}/{EPOCH} - Loss: {avg_loss:.6f} - Acc: {accuracy:.2%}")
 
         self.saveTrainedNetwork(saveFile)
         print(f"Network saved to {saveFile} after epoch {epoch + 1}")
