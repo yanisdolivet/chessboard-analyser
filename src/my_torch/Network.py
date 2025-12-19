@@ -133,14 +133,11 @@ class Network:
         predictions = np.argmax(output, axis=1)
         mapping = {0: "Nothing", 1: "Check", 2: "Checkmate"}
 
-        print(f"{'PREDICTION':<12} | {'CONFIDENCE':<10} | {'DETAILS [Nothing, Check, Mate]'}")
-        print("-" * 65)
-
         for i, p in enumerate(predictions):
             label = mapping.get(p, "Error")
             confidence = output[i][p]
             probs = f"[{output[i][0]:.3f}, {output[i][1]:.3f}, {output[i][2]:.3f}]"
-            print(f"{label:<12} | {confidence:.1%}      | {probs}")
+            print(label)
 
     def forward(self, input, training=True) -> np.array:
         current = input
@@ -155,12 +152,12 @@ class Network:
 
     def backward(self, gradient, learning_rate=0.01, lambda_reg=LREG):
         """Perform backward pass through all layers with L2 regularization.
-        
+
         Args:
             gradient (numpy.ndarray): Initial gradient from loss function.
             learning_rate (float): Learning rate for updates.
             lambda_reg (float): L2 regularization strength.
-            
+
         Returns:
             numpy.ndarray: Gradient propagated to input layer.
         """

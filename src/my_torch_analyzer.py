@@ -37,14 +37,9 @@ def main():
         parser = FENParser()
         X_data, Y_targets = parser.parse_file(chessfile)
 
-        print(f"First 5 samples of X data:\n{X_data[:5]}")
-        print(f"First 5 samples of Y targets:\n{Y_targets[:5]}")
-
         if len(X_data) == 0:
             print("Error: No valid FEN data.", file=sys.stderr)
             sys.exit(ERROR_CODE)
-
-        print(f"Data loaded: {len(X_data)} samples.")
 
         loader = ModelLoader()
         layer_sizes, weights, biases = loader.load_network(loadfile)
@@ -58,15 +53,12 @@ def main():
             X_train, X_val = X_data[:split], X_data[split:]
             Y_train, Y_val = Y_targets[:split], Y_targets[split:]
 
-            print(f"Training set: {len(X_train)} | Validation set: {len(X_val)}")
-
             network = Network(layer_sizes, X_train, Y_train)
             network.createLayer(weights, biases)
 
             network.train(0.05, savefile, X_val=X_val, Y_val=Y_val)
 
         else:
-            print("Running prediction...")
             network = Network(layer_sizes, X_data, Y_targets)
             network.createLayer(weights, biases)
             network.predict()
