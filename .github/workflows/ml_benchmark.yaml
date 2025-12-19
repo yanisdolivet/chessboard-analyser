@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main", "gh-actions" ]
 
+env:
+  TRAINING_LOSS_FILE: "loss_curve.png"
+  TRAINING_METRICS_FILE: "accuracy_curve.png"
+
 permissions:
   contents: write
 

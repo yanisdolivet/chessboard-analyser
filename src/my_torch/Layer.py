@@ -9,7 +9,7 @@ import numpy as np
 
 class Layer:
 
-    def __init__(self, inputSize, outputSize, activation_type, dropout_rate=0.05):
+    def __init__(self, inputSize, outputSize, activation_type, dropout_rate=0.31):
         """Initialize a neural network layer.
 
         Args:

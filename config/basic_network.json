@@ -7,17 +7,12 @@
     },
     {
       "type": "HIDDEN1",
-      "size": 512,
+      "size": 768,
       "activation": "relu"
     },
     {
       "type": "HIDDEN2",
-      "size": 256,
-      "activation": "relu"
-    },
-    {
-      "type": "HIDDEN2",
-      "size": 128,
+      "size": 896,
       "activation": "relu"
     },
     {

@@ -10,6 +10,7 @@ import sys
 import copy
 import numpy as np
 from src.my_torch.Layer import Layer
+from src.data_analysis.data_analysis import DataAnalysis
 
 MAGIC_NUMBER = 0x48435254
 ERROR_CODE = 84
@@ -24,6 +25,7 @@ class Network:
         self.matrix_input = matrixInput
         self.matrix_output = matrixOutput
         self.layers = []
+        self.data_analysis = DataAnalysis(epochs=EPOCH)
 
     def createLayer(self, weights, biases):
         for i in range(1, self.layerCount):
@@ -73,6 +75,9 @@ class Network:
                 # Forward
                 predicted_output = self.forward(input_data, training=True)
 
+                # Save predictions for analysis
+                self.data_analysis.save_predictions(np.argmax(predicted_output, axis=1), np.argmax(expected_output, axis=1))
+
                 # Loss (Cross-Entropy)
                 epsilon = 1e-15
                 predicted_clipped = np.clip(predicted_output, epsilon, 1 - epsilon)
@@ -104,6 +109,7 @@ class Network:
                 val_preds = np.argmax(val_output, axis=1)
                 val_truth = np.argmax(Y_val, axis=1)
                 val_acc = np.mean(val_preds == val_truth)
+                val_loss = -np.sum(Y_val * np.log(np.clip(val_output, 1e-15, 1 - 1e-15))) / len(X_val)
                 val_msg = f" - Val Acc: {val_acc:.2%}"
 
                 # Sauvegarde du meilleur état (à garder ??)
@@ -113,6 +119,8 @@ class Network:
                     best_biases = [copy.deepcopy(l.biases) for l in self.layers]
 
             print(f"Epoch {epoch + 1}/{EPOCH} - Loss: {avg_loss:.4f} - Train Acc: {train_acc:.2%}{val_msg}")
+            self.data_analysis.save_loss(avg_loss, val_loss if X_val is not None else 0.0)
+            self.data_analysis.save_metrics(train_acc, val_acc if X_val is not None else 0.0)
 
             # Learning rate decay doux
             if (epoch + 1) % 20 == 0:
@@ -126,6 +134,7 @@ class Network:
                 layer.biases = best_biases[i]
 
         self.saveTrainedNetwork(saveFile)
+        self.data_analysis.export()
 
     def predict(self):
         """Affiche les prédictions avec les probabilités détaillées."""
