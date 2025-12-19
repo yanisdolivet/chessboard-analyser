@@ -2,17 +2,22 @@
   "layers": [
     {
       "type": "INPUT",
-      "size": 769,
+      "size": 2305,
       "activation": "none"
     },
     {
       "type": "HIDDEN1",
-      "size": 640,
+      "size": 512,
       "activation": "relu"
     },
     {
       "type": "HIDDEN2",
-      "size": 448,
+      "size": 256,
+      "activation": "relu"
+    },
+    {
+      "type": "HIDDEN2",
+      "size": 128,
       "activation": "relu"
     },
     {

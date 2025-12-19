@@ -89,12 +89,13 @@ class Layer:
         else:
             return np.ones_like(z)
 
-    def backward(self, gradient, learning_rate):
+    def backward(self, gradient, learning_rate, lambda_reg=0.01):
         """Perform backward pass (backpropagation).
 
         Args:
             gradient (numpy.ndarray): Gradient from the next layer.
             learning_rate (float): Learning rate for weight updates.
+            lambda_reg (float): L2 regularization strength.
 
         Returns:
             numpy.ndarray: Gradient to pass to the previous layer.
@@ -111,6 +112,9 @@ class Layer:
         dW = np.dot(self.cache_input.T, dZ) / batch_size
         dB = np.sum(dZ, axis=0, keepdims=True) / batch_size
         dX_prev = np.dot(dZ, self.weights.T)
+
+        # Add L2 regularization gradient to weight gradient (not to bias)
+        dW += lambda_reg * self.weights
 
         # Momentum
         self.v_weights = self.beta * self.v_weights + (1 - self.beta) * dW
