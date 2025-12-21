@@ -18,11 +18,18 @@
     {
       "type": "OUTPUT",
       "size": 3,
-      "activation": "sigmoid"
+      "activation": "linear"
     }
   ],
   "hyperparameters": {
     "learning_rate": 0.005,
     "initialization": "he_mixed_xavier"
+  },
+  "training": {
+    "batch_size": 64,
+    "epochs": 100,
+    "lreg": 0.001,
+    "loss_function": "categorical_crossentropy",
+    "dropout_rate": 0.2
   }
 }
