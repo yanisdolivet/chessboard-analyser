@@ -29,7 +29,14 @@ FILE = [
 
 
 class DataAnalysis:
+    """Class to handle data analysis and visualization of training results."""
+
     def __init__(self, modelspec=None, epochs=100):
+        """Initialize data analysis with model specifications and number of epochs.
+        Args:
+            modelspec (ModelSpecifications): Model specifications object.
+            epochs (int): Number of training epochs.
+        """
         self.training_loss = []
         self.validation_loss = []
 
@@ -65,6 +72,12 @@ class DataAnalysis:
             print(f"Error initializing data analysis files: {e}")
 
     def save_loss(self, training_loss, validation_loss):
+        """Save training and validation loss values.
+
+        Args:
+            training_loss (float): Training loss value.
+            validation_loss (float): Validation loss value.
+        """
         self.training_loss.append(training_loss)
         self.validation_loss.append(validation_loss)
         with open(TRAINING_LOSS_FILE, "a") as f:
@@ -73,6 +86,12 @@ class DataAnalysis:
             f.write(f"{validation_loss}\n")
 
     def save_metrics(self, training_metric, validation_metric):
+        """Save training and validation metric values.
+
+        Args:
+            training_metric (float): Training metric value.
+            validation_metric (float): Validation metric value.
+        """
         self.training_metrics.append(training_metric)
         self.validation_metrics.append(validation_metric)
         with open(TRAINING_METRICS_FILE, "a") as f:
@@ -81,6 +100,12 @@ class DataAnalysis:
             f.write(f"{validation_metric}\n")
 
     def save_predictions(self, preds, truths):
+        """Save predicted and expected values.
+
+        Args:
+            preds (list): List of predicted values.
+            truths (list): List of expected (true) values.
+        """
         self.prediction.extend(preds)
         self.expected.extend(truths)
         with open(PREDICTIONS_FILE, "a") as f:
@@ -91,6 +116,11 @@ class DataAnalysis:
                 f.write(f"{truth}\n")
 
     def build_confusion_matrix(self):
+        """Build a confusion matrix from the stored predictions and expected values.
+
+        Returns:
+            list: Confusion matrix as a 2D list.
+        """
         num_classes = 3
         confusion_matrix = [[0 for _ in range(num_classes)] for _ in range(num_classes)]
 
@@ -100,6 +130,11 @@ class DataAnalysis:
         return confusion_matrix
 
     def calculate_precision_recall(self):
+        """Calculate precision and recall for each class.
+
+        Returns:
+            tuple: Two lists containing precision and recall values for each class.
+        """
         cm = self.build_confusion_matrix()
         num_classes = len(cm)
         precision = []
@@ -119,6 +154,7 @@ class DataAnalysis:
         return precision, recall
 
     def plot_precision_recall(self):
+        """Plot precision and recall for each class."""
         savedir = os.path.join(OUTPUT_DIR, "precision_recall")
         if not os.path.exists(savedir):
             os.makedirs(savedir)
@@ -154,6 +190,7 @@ class DataAnalysis:
         plt.close()
 
     def plot_confusion_matrix(self):
+        """Plot the confusion matrix."""
         savedir = os.path.join(OUTPUT_DIR, "confusion_matrix")
         if not os.path.exists(savedir):
             os.makedirs(savedir)
@@ -173,6 +210,7 @@ class DataAnalysis:
         plt.close()
 
     def plot_loss(self):
+        """Plot training and validation loss over epochs."""
         savedir = os.path.join(OUTPUT_DIR, "loss")
         if not os.path.exists(savedir):
             os.makedirs(savedir)
@@ -189,6 +227,7 @@ class DataAnalysis:
         plt.close()
 
     def plot_metrics(self):
+        """Plot training and validation accuracy over epochs."""
         savedir = os.path.join(OUTPUT_DIR, "metrics")
         if not os.path.exists(savedir):
             os.makedirs(savedir)
@@ -205,6 +244,7 @@ class DataAnalysis:
         plt.close()
 
     def export(self):
+        """Export all plots to the output directory."""
         if not os.path.exists(OUTPUT_DIR):
             os.makedirs(OUTPUT_DIR)
         self.plot_loss()

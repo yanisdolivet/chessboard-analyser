@@ -7,8 +7,7 @@ ERROR_CODE = 84
 
 class FENParser:
     """
-    Gère le parsing des fichiers FEN pour générer des tableaux NumPy
-    d'entrée (X) et de sortie (Y) pour l'entraînement du réseau neuronal.
+    Parser for FEN chess positions and their results.
     """
 
     PIECE_INDEX = {
@@ -35,7 +34,11 @@ class FENParser:
 
     def _encode_board_position(self, board_position: str) -> np.ndarray:
         """
-        Convertit la partie de position FEN en un vecteur One-Hot de 768 dimensions.
+        Convert the FEN board position part into a 768-dimensional One-Hot vector.
+        Args:
+            board_position (str): FEN string representing the board position.
+        Returns:
+            np.ndarray: 1D NumPy array of shape (2305,) representing the encoded
         """
         board = chess.Board(board_position)
         matrix = np.zeros((8, 8, 36), dtype=np.float32)
@@ -84,7 +87,11 @@ class FENParser:
 
     def _map_result_to_one_hot(self, result_word: str) -> np.ndarray:
         """
-        Convertit le résultat ('Nothing', 'Check', 'Checkmate') en vecteur One-Hot 1x3.
+        Convert the result ('Nothing', 'Check', 'Checkmate') into a 1x3 One-Hot vector
+        Args:
+            result_word (str): Result string.
+        Returns:
+            np.ndarray: 1D NumPy array of shape (3,) representing the encoded result.
         """
         if result_word == "Nothing":
             return np.array([1.0, 0.0, 0.0], dtype=np.float32)
@@ -101,7 +108,11 @@ class FENParser:
 
     def parse_file(self, chessfile: str) -> tuple[np.ndarray, np.ndarray]:
         """
-        Lit le fichier FEN ligne par ligne et retourne X (entrées) et Y (cibles) en tableaux NumPy.
+        Read the FEN file line by line and return X (inputs) and Y (targets) as NumPy arrays.
+        Args:
+            chessfile (str): Path to the FEN file.
+        Returns:
+            tuple: (X, Y) where X is the input data and Y is the target data.
         """
         input_data = []
         output_targets = []

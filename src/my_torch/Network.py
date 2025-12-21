@@ -17,8 +17,16 @@ ERROR_CODE = 84
 
 
 class Network:
+    """Neural Network class managing layers, training, and prediction."""
 
     def __init__(self, layerSize, matrixInput, matrixOutput, model_spec):
+        """Initialize the Network with layer sizes, input/output data, and model specifications.
+        Args:
+            layerSize (list): List of integers representing the size of each layer.
+            matrixInput (numpy.ndarray): Input data matrix.
+            matrixOutput (numpy.ndarray): Output data matrix.
+            model_spec (ModelSpecifications): Model specifications object.
+        """
         self.layerCount = len(layerSize)
         self.layerSize = layerSize
         self.matrix_input = matrixInput
@@ -30,6 +38,11 @@ class Network:
         )
 
     def createLayer(self, weights, biases):
+        """Create layers of the network with given weights and biases or initialize them.
+        Args:
+            weights (list or None): List of weight matrices for each layer or None for initialization.
+            biases (list or None): List of bias vectors for each layer or None for initialization.
+        """
         for i in range(1, self.layerCount):
             l1 = self.layerSize[i - 1]
             l2 = self.layerSize[i]
@@ -73,7 +86,15 @@ class Network:
         Y_val=None,
         data_analysis=None,
     ):
-        """Entraînement avec Validation et Sauvegarde du Meilleur Modèle."""
+        """Train the neural network using mini-batch gradient descent with L2 regularization.
+        Args:
+            learningRate (float): Learning rate for gradient descent.
+            saveFile (str): File path to save the trained model.
+            batch_size (int or None): Size of mini-batches for training. If None, use model_spec.batch_size.
+            X_val (numpy.ndarray or None): Validation input data.
+            Y_val (numpy.ndarray or None): Validation output data.
+            data_analysis (DataAnalysis or None): DataAnalysis object for tracking training progress.
+        """
         num_samples = len(self.matrix_input)
         print(f"Starting training on {num_samples} samples...")
 
@@ -152,7 +173,6 @@ class Network:
                 ) / len(X_val)
                 val_msg = f" - Val Acc: {val_acc:.2%}"
 
-                # Sauvegarde du meilleur état (à garder ??)
                 if val_acc > best_val_acc:
                     best_val_acc = val_acc
                     best_weights = [copy.deepcopy(l.weights) for l in self.layers]
@@ -170,11 +190,11 @@ class Network:
                     train_acc, val_acc if X_val is not None else 0.0
                 )
 
-            # Learning rate decay doux
+            # Learning rate decay
             if (epoch + 1) % 20 == 0:
                 learningRate *= 0.9
 
-        # Restauration du meilleur modèle
+        # Restore the best model
         if best_weights is not None:
             print(f"Restoring best model (Val Acc: {best_val_acc:.2%})")
             for i, layer in enumerate(self.layers):
@@ -187,7 +207,7 @@ class Network:
             self.data_analysis.export()
 
     def predict(self):
-        """Affiche les prédictions avec les probabilités détaillées."""
+        """Display predictions with detailed probabilities."""
         output = self.forward(self.matrix_input, training=False)
         predictions = np.argmax(output, axis=1)
         mapping = {0: "Nothing", 1: "Check", 2: "Checkmate"}
@@ -197,6 +217,13 @@ class Network:
             print(label)
 
     def forward(self, input, training=True) -> np.array:
+        """Perform forward pass through all layers.
+        Args:
+            input (numpy.ndarray): Input data matrix.
+            training (bool): Flag indicating if in training mode (for dropout).
+        Returns:
+            numpy.ndarray: Output after forward pass through the network.
+        """
         current = input
         for i in range(len(self.layers)):
             current = self.layers[i].forward(current, training)
@@ -226,11 +253,20 @@ class Network:
         return current_gradient
 
     def _encode_string(self, s):
-        """Encode string as length-prefixed bytes."""
+        """Encode string as length-prefixed bytes.
+        Args:
+            s (str): String to encode.
+        Returns:
+            bytes: Encoded string with length prefix.
+        """
         encoded = s.encode("utf-8")
         return struct.pack("I", len(encoded)) + encoded
 
     def saveTrainedNetwork(self, filePath):
+        """Save the trained network to a binary file with full configuration.
+        Args:
+            filePath (str): Path to save the network file.
+        """
         try:
             VERSION = 2
             with open(filePath, "wb") as f:

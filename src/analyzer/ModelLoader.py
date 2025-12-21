@@ -20,7 +20,12 @@ class ModelLoader:
         pass
 
     def _read_header(self, f) -> tuple[int, int]:
-        """Lit et valide le Magic Number et retourne le nombre de couches et la version."""
+        """Read and validate the Magic Number, returning layer count and version.
+        Args:
+            f (file object): Opened binary file object.
+        Returns:
+            tuple: (layer_count (int), version (int))
+        """
         header_data = f.read(12)
         if len(header_data) < 12:
             # Try old format (version 1 - no version field)
@@ -54,7 +59,15 @@ class ModelLoader:
         return layer_count, version
 
     def _read_layer_sizes(self, f, layer_count: int) -> list[int]:
-        """Lit la taille de chaque couche (la topologie)."""
+        """Read the size of each layer (the topology).
+
+        Args:
+            f (file object): Opened binary file object.
+            layer_count (int): Number of layers in the network.
+
+        Returns:
+            list[int]: List of layer sizes.
+        """
         topology_data = f.read(layer_count * 4)
         if len(topology_data) < layer_count * 4:
             print("Error: Missing layer size information.", file=sys.stderr)
@@ -64,7 +77,13 @@ class ModelLoader:
         return layer_sizes
 
     def _read_and_reshape_weights(self, f, layer_sizes: list[int]) -> list[np.ndarray]:
-        """Lit le segment des poids, le déserialise et le remodèle en matrices."""
+        """Read the weights segment, deserialize and reshape into matrices.
+        Args:
+            f (file object): Opened binary file object.
+            layer_sizes (list[int]): List of layer sizes.
+        Returns:
+            list[np.ndarray]: List of weight matrices for each layer.
+        """
         weights = []
         layer_count = len(layer_sizes)
 
@@ -97,7 +116,15 @@ class ModelLoader:
         return weights
 
     def _read_and_reshape_biases(self, f, layer_sizes: list[int]) -> list[np.ndarray]:
-        """Lit le segment des biais, le déserialise et le remodèle en vecteurs lignes."""
+        """Read the biases segment, deserialize and reshape into row vectors.
+
+        Args:
+            f (file object): Opened binary file object.
+            layer_sizes (list[int]): List of layer sizes.
+
+        Returns:
+            list[np.ndarray]: List of bias vectors for each layer.
+        """
         biases = []
         layer_count = len(layer_sizes)
 
@@ -124,7 +151,12 @@ class ModelLoader:
         return biases
 
     def _decode_string(self, f):
-        """Decode length-prefixed string."""
+        """Decode length-prefixed string.
+        Args:
+            f (file object): Opened binary file object.
+        Returns:
+            str: Decoded string.
+        """
         length_data = f.read(4)
         if len(length_data) < 4:
             raise struct.error("Cannot read string length")
@@ -135,7 +167,13 @@ class ModelLoader:
         return string_data.decode("utf-8")
 
     def _read_configuration(self, f, layer_count):
-        """Read network configuration from binary file (version 2+)."""
+        """Read network configuration from binary file (version 2+).
+        Args:
+            f (file object): Opened binary file object.
+            layer_count (int): Number of layers in the network.
+        Returns:
+            ModelSpecifications: Object containing network configuration.
+        """
         from src.model_specification import ModelSpecifications
 
         spec = ModelSpecifications()
@@ -171,8 +209,9 @@ class ModelLoader:
         return spec
 
     def load_network(self, filepath: str) -> tuple[list, list, list, object]:
-        """Fonction principale orchestrant la lecture du fichier .nn.
-
+        """Load neural network from binary file.
+        Args:
+            filepath (str): Path to the .nn file.
         Returns:
             tuple: (layer_sizes, weights, biases, model_specification)
         """

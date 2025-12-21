@@ -3,6 +3,12 @@
 import json
 
 def process_chess_data(input_file, output_file):
+    """Process chess data from a JSONL file and write FEN with state to output.
+
+    Args:
+        input_file (str): _path to input JSONL file
+        output_file (str): _path to output text file
+    """
     with open(input_file, 'r') as f_in, open(output_file, 'w') as f_out:
         for line in f_in:
             # Skip empty lines

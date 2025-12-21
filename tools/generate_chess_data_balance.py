@@ -21,6 +21,12 @@ LABELS = ("Nothing", "Check", "Checkmate")
 
 
 def load_by_label(src_path: Path):
+    """Load lines from source file and group by label.
+    Args:
+        src_path (Path): Path to the source file.
+    Returns:
+        dict: A dictionary with labels as keys and lists of lines as values.
+    """
     text = src_path.read_text(encoding="utf-8")
     lines = [l.strip() for l in text.splitlines() if l.strip()]
     groups = {lab: [] for lab in LABELS}
@@ -34,6 +40,7 @@ def load_by_label(src_path: Path):
 
 
 def main():
+    """Main function to generate balanced chess data file."""
     p = argparse.ArgumentParser(description="Generate balanced chess data file")
     p.add_argument(
         "--input", "-i", default="data/chess-data-1.txt", help="source labeled file"

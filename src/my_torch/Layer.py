@@ -104,13 +104,13 @@ class Layer:
         if self.dropout_mask is not None:
             gradient = (gradient * self.dropout_mask) / (1.0 - self.dropout_rate)
 
-        # calcul du gradient dZ
+
         derivative = (
             np.where(self.cache_z > 0, 1, 0) if self.activation_type == "relu" else 1
         )
         dZ = gradient * derivative
 
-        # gradients pour les paramètres
+        # gradients for parameters
         batch_size = self.cache_input.shape[0]
         dW = np.dot(self.cache_input.T, dZ) / batch_size
         dB = np.sum(dZ, axis=0, keepdims=True) / batch_size

@@ -16,6 +16,10 @@ ERROR_CODE = 84
 
 
 def parse_arguments():
+    """Parse command-line arguments and return the mode and file paths.
+    Returns:
+        tuple: (is_train (bool), loadfile (str), chessfile (str), savefile (str or None))
+    """
     parser = argparse.ArgumentParser(
         usage="./my_torch_analyzer.py [--predict | --train [--save SAVEFILE]] LOADFILE CHESSFILE"
     )
@@ -36,6 +40,7 @@ def parse_arguments():
 
 
 def main():
+    """Main function to run the training or prediction process based on command-line arguments."""
     try:
         is_train, loadfile, chessfile, savefile = parse_arguments()
 
