@@ -11,23 +11,59 @@ import sys, json, struct
 import numpy as np
 
 MAGIC_NUMBER = 0x48435254  # 'TRCH' in hex
+VERSION = 2  # Binary protocol version
 
 
-def save_network(filepath, layer_sizes, weights, biases):
-    """Save neural network to binary file.
+def encode_string(s):
+    """Encode string as length-prefixed bytes."""
+    encoded = s.encode("utf-8")
+    return struct.pack("I", len(encoded)) + encoded
+
+
+def save_network(filepath, layer_sizes, weights, biases, config):
+    """Save neural network to binary file with full configuration.
 
     Args:
         filepath (str): Path to save the network file.
         layer_sizes (list): List of integers representing layer sizes.
         weights (list): List of numpy arrays containing weight matrices.
         biases (list): List of numpy arrays containing bias vectors.
+        config (dict): Configuration dictionary with all network parameters.
     """
     with open(filepath, "wb") as f:
-        # Header: Magic Num + Num of layers
-        f.write(struct.pack("II", MAGIC_NUMBER, len(layer_sizes)))
+        # Header: Magic Num + Version + Num of layers
+        f.write(struct.pack("III", MAGIC_NUMBER, VERSION, len(layer_sizes)))
 
-        # Write layers
+        # Write layer sizes
         f.write(struct.pack(f"{len(layer_sizes)}I", *layer_sizes))
+
+        # Write layer types and activations
+        for layer in config.get("layers", []):
+            layer_type = layer.get("type", "HIDDEN")
+            activation = layer.get("activation", "none")
+            f.write(encode_string(layer_type))
+            f.write(encode_string(activation))
+
+        # Write hyperparameters
+        hyperparams = config.get("hyperparameters", {})
+        learning_rate = hyperparams.get("learning_rate", 0.01)
+        initialization = hyperparams.get("initialization", "random")
+        f.write(struct.pack("f", learning_rate))
+        f.write(encode_string(initialization))
+
+        # Write training parameters
+        training = config.get("training", {})
+        batch_size = training.get("batch_size", 32)
+        epochs = training.get("epochs", 100)
+        lreg = training.get("lreg", 0.0)
+        loss_function = training.get("loss_function", "mse")
+        dropout_rate = training.get("dropout_rate", 0.0)
+
+        f.write(struct.pack("I", batch_size))
+        f.write(struct.pack("I", epochs))
+        f.write(struct.pack("f", lreg))
+        f.write(struct.pack("f", dropout_rate))
+        f.write(encode_string(loss_function))
 
         # Write weights and biases as floats
         for w in weights:
@@ -101,7 +137,7 @@ def parse_config(filepath):
             init_method = config.get("hyperparameters", {}).get(
                 "initialization", "random"
             )
-        return layer_size, init_method
+        return layer_size, init_method, config
     except Exception as e:
         print(f"Error reading config file: {e}")
 
@@ -139,14 +175,14 @@ def main():
     )
     print(f"Building project with configuration from: {filepath}")
 
-    layer_size, init_method = parse_config(filepath)
+    layer_size, init_method, config = parse_config(filepath)
     print("Configuration File Parsed Successfully")
 
     for nn in range(nbofnn):
         nnfilepath = f"{filepath.split('/')[-1].split('.')[0]}_{nn}.nn"
         weights = create_weights(init_method, layer_size)
         biases = create_biases(layer_size)
-        save_network(nnfilepath, layer_size, weights, biases)
+        save_network(nnfilepath, layer_size, weights, biases, config)
         print(
             f"Untrained neural network successfully created with {len(layer_size)} layers."
         )

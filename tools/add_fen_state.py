@@ -26,7 +26,12 @@ except Exception:
 
 
 def fen_state(fen):
-    """Return 'Nothing', 'Check' or 'Checkmate' for the side to move in FEN."""
+    """Determine the game state from a FEN string.
+    Args:
+        fen (str): FEN string representing a chess position.
+    Returns:
+        str: One of "Nothing", "Check", or "Checkmate".
+    """
     board = chess.Board(fen)
     if board.is_checkmate():
         return "Checkmate"
@@ -36,6 +41,12 @@ def fen_state(fen):
 
 
 def process_file(path):
+    """Process the CSV file to add a State column based on FEN.
+    Args:
+        path (str): Path to the input CSV file.
+    Returns:
+        int: 0 on success, 1 on failure.
+    """
     if not os.path.isfile(path):
         print(f"File not found: {path}")
         return 1

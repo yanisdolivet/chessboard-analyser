@@ -39,7 +39,11 @@ def generate_mock_data(epochs):
 
 def plot_metrics(epochs, loss, accuracy):
     """
-    Plots the training curves and saves them to a file.
+    Plot the training loss and accuracy metrics over epochs and save the figure.
+    Args:
+        epochs (array-like): Array of epoch numbers.
+        loss (array-like): Array of loss values.
+        accuracy (array-like): Array of accuracy values.
     """
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
 
