@@ -10,11 +10,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.analyzer.FENParser import FENParser
 from src.analyzer.ModelLoader import ModelLoader
 from src.my_torch.Network import Network
+from src.data_analysis.data_analysis import DataAnalysis
 
 ERROR_CODE = 84
 
+
 def parse_arguments():
-    parser = argparse.ArgumentParser(usage="./my_torch_analyzer.py [--predict | --train [--save SAVEFILE]] LOADFILE CHESSFILE")
+    parser = argparse.ArgumentParser(
+        usage="./my_torch_analyzer.py [--predict | --train [--save SAVEFILE]] LOADFILE CHESSFILE"
+    )
     mode_group = parser.add_mutually_exclusive_group(required=True)
     mode_group.add_argument("--train", action="store_true")
     mode_group.add_argument("--predict", action="store_true")
@@ -30,6 +34,7 @@ def parse_arguments():
 
     return args.train, args.LOADFILE, args.CHESSFILE, savefile
 
+
 def main():
     try:
         is_train, loadfile, chessfile, savefile = parse_arguments()
@@ -42,7 +47,7 @@ def main():
             sys.exit(ERROR_CODE)
 
         loader = ModelLoader()
-        layer_sizes, weights, biases = loader.load_network(loadfile)
+        layer_sizes, weights, biases, model_spec = loader.load_network(loadfile)
 
         if is_train:
             indices = np.arange(len(X_data))
@@ -53,18 +58,27 @@ def main():
             X_train, X_val = X_data[:split], X_data[split:]
             Y_train, Y_val = Y_targets[:split], Y_targets[split:]
 
-            network = Network(layer_sizes, X_train, Y_train)
+            data_analysis = DataAnalysis(modelspec=model_spec, epochs=model_spec.epochs)
+
+            network = Network(layer_sizes, X_train, Y_train, model_spec)
             network.createLayer(weights, biases)
 
-            network.train(0.05, savefile, X_val=X_val, Y_val=Y_val)
+            network.train(
+                model_spec.learning_rate,
+                savefile,
+                X_val=X_val,
+                Y_val=Y_val,
+                data_analysis=data_analysis,
+            )
 
         else:
-            network = Network(layer_sizes, X_data, Y_targets)
+            network = Network(layer_sizes, X_data, Y_targets, model_spec)
             network.createLayer(weights, biases)
             network.predict()
 
     except SystemExit:
         sys.exit(ERROR_CODE)
+
 
 if __name__ == "__main__":
     main()

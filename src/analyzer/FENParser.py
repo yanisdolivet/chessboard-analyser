@@ -39,22 +39,34 @@ class FENParser:
         """
         board = chess.Board(board_position)
         matrix = np.zeros((8, 8, 36), dtype=np.float32)
-        piece_map = {chess.PAWN: 0, chess.KNIGHT: 1, chess.BISHOP: 2, chess.ROOK: 3,
-                 chess.QUEEN: 4, chess.KING: 5}
+        piece_map = {
+            chess.PAWN: 0,
+            chess.KNIGHT: 1,
+            chess.BISHOP: 2,
+            chess.ROOK: 3,
+            chess.QUEEN: 4,
+            chess.KING: 5,
+        }
 
         white_attack = np.zeros((8, 8), dtype=bool)
         black_attack = np.zeros((8, 8), dtype=bool)
 
         for square in chess.SQUARES:
             if board.is_attacked_by(chess.WHITE, square):
-                white_attack[chess.square_rank(square)][chess.square_file(square)] = True
+                white_attack[chess.square_rank(square)][
+                    chess.square_file(square)
+                ] = True
             if board.is_attacked_by(chess.BLACK, square):
-                black_attack[chess.square_rank(square)][chess.square_file(square)] = True
+                black_attack[chess.square_rank(square)][
+                    chess.square_file(square)
+                ] = True
 
         for square in chess.SQUARES:
             piece_on_board = board.piece_at(square)
             if piece_on_board:
-                piece_idx = piece_map[piece_on_board.piece_type] + (6 if piece_on_board.color == chess.BLACK else 0)
+                piece_idx = piece_map[piece_on_board.piece_type] + (
+                    6 if piece_on_board.color == chess.BLACK else 0
+                )
                 base_channel = piece_idx * 3
 
                 row = chess.square_rank(square)
@@ -62,9 +74,9 @@ class FENParser:
                 matrix[row, col, base_channel] = 1.0
 
                 if white_attack[row, col]:
-                    matrix[row, col, base_channel+1] = 1.0
+                    matrix[row, col, base_channel + 1] = 1.0
                 if black_attack[row, col]:
-                    matrix[row, col, base_channel+2] = 1.0
+                    matrix[row, col, base_channel + 2] = 1.0
 
         flat_vector = matrix.flatten()
         turn_val = 1.0 if board.turn == chess.WHITE else 0.0
